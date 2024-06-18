@@ -6,6 +6,7 @@ export const defaultSliderSettings = {
     topP: 1,
     frequencyPenalty: 0,
     presencePenalty: 0,
+    cameraCaptureRate: 5,
 } as const;
 
 export const agentsOptions = ['gpt-3.5-turbo', 'gpt-4-1106-preview'] as const;
@@ -24,6 +25,7 @@ export const defaultSettings: AgentType = {
     topP: null,
     frequencyPenalty: null,
     presencePenalty: null,
+    cameraCaptureRate: null,
     stopSequences: [],
 };
 
@@ -54,6 +56,7 @@ export const initialSlidersEnabled = {
     topPEnabled: false,
     frequencyPenaltyEnabled: false,
     presencePenaltyEnabled: false,
+    cameraCaptureRateEnabled: false,
 } as const;
 
 export const ApiPaths = {
@@ -62,6 +65,7 @@ export const ApiPaths = {
     DATA_AGGREGATION_PATH: 'dataAggregation',
     AGENTS_PATH: 'agents',
     EXPERIMENTS_PATH: 'experiments',
+    SEND_SNAP: 'sendSnap',
 } as const;
 
 export const AdminSections = {

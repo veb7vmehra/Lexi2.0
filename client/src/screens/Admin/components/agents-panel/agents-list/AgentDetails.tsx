@@ -73,6 +73,12 @@ export const AgentDetails = ({ agent }) => (
                 </ListItem>
                 <ListItem>
                     <ListItemText
+                        primary="Camera Capture Rate"
+                        secondary={agent.cameraCaptureRate !== null ? agent.cameraCaptureRate : 'Not Active'}
+                    />
+                </ListItem>
+                <ListItem>
+                    <ListItemText
                         primary="Stop Sequences"
                         secondary={agent.stopSequences.length ? agent.stopSequences.join(', ') : 'Not Active'}
                     />

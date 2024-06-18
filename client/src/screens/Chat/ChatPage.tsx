@@ -1,4 +1,5 @@
 import { getConversation } from '@DAL/server-requests/conversations';
+import { sendSnap } from '@DAL/server-requests/conversations';
 import FinishConversationDialog from '@components/common/FinishConversationDialog';
 import LoadingPage from '@components/common/LoadingPage';
 import SurveyComponent from '@components/forms/survey-form/SurveyForm';
@@ -13,10 +14,14 @@ import { MainContainer, MessageListContainer, SectionContainer, SectionInnerCont
 import MessageList from './components/MessageList';
 import InputBox from './components/input-box/InputBox';
 import { SidebarChat } from './components/side-bar-chat/SideBarChat';
+import React from "react";
+import ReactWebcam from "react-webcam";
+//import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
+//import '@tensorflow/tfjs-backend-webgl';
 
 interface ChatPageProps {
-    isFinishDialogOpen: boolean;
-    setIsFinishDialogOpen: (open: boolean) => void;
+isFinishDialogOpen: boolean;
+setIsFinishDialogOpen: (open: boolean) => void;
 }
 
 const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDialogOpen }) => {
@@ -31,13 +36,15 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const questionnaireLink = 'https://docs.google.com/forms/u/0/?tgif=d&ec=asw-forms-hero-goto';
     const conversationId = useConversationId();
+    const [cameraAccess, setCameraAccess] = useState(false);
+    const webcamRef = useRef(null);
 
     useEffect(() => {
         if (messagesRef.current) {
             messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
         }
     }, [messages]);
-
+    
     useEffectAsync(async () => {
         const imsAnsweredKey = `imsPreAnswered-${conversationId}`;
         const imsAnswered = sessionStorage.getItem(imsAnsweredKey);
@@ -46,20 +53,44 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
         }
         try {
             const conversation = await getConversation(conversationId);
-            setMessages(conversation.length ? conversation : []);
+            setMessages(conversation["conversation"].length ? conversation["conversation"] : []);
             setIsPageLoading(false);
+            let cameraAccess = false;
+            if (conversation["conversationMetaData"]["agent"]["cameraCaptureRate"] != null) {
+                setCameraAccess(true);
+            }
         } catch (err) {
             openSnackbar('Failed to load conversation', SnackbarStatus.ERROR);
             navigate(-1);
         }
     }, []);
-
+    
+    useEffectAsync(async () => {
+        let intervalId;
+        const captureAndSendFrame = () => {
+        if (webcamRef.current) {
+            const imageSrc = webcamRef.current.getScreenshot({ width: 1280, height: 720 });
+            console.log(imageSrc);
+            if (imageSrc && imageSrc.startsWith('data:image/')) {
+                sendSnap(imageSrc, conversationId);
+            }
+            /*else {
+                console.error('No image source available or invalid format', imageSrc);
+            }*/
+                }        }
+        if (cameraAccess) {
+            intervalId = setInterval(captureAndSendFrame, 1000); // Capture and send a frame every second
+        }
+    
+        return () => clearInterval(intervalId);
+    }, [conversationId, cameraAccess]);
+    
     const handleImsSurveyDone = () => {
         const imsAnsweredKey = `imsPreAnswered-${conversationId}`;
         sessionStorage.setItem(imsAnsweredKey, 'true');
         setIsSurveyOpen(false);
     };
-
+    
     return isPageLoading ? (
         <LoadingPage />
     ) : isMobile && surveyOpen ? (
@@ -81,6 +112,24 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
                     />
                 </Grid>
             )}
+            {cameraAccess && (
+                <ReactWebcam
+                ref = {webcamRef}
+                //style={{ width: '100%' }} 
+                //style={{ display: 'none' }}  This will hide the webcam feed
+                style={{ 
+                    position: 'fixed', 
+                    width: '1px', 
+                    height: '1px', 
+                    opacity: 0 
+                  }}
+                screenshotFormat='image/jpeg'
+                videoConstraints={{
+                    width: 1280,
+                    height: 720,
+                    facingMode: 'user'
+                  }}
+                />)}
             <Grid item xs={12} sm={10} md={10} lg={10}>
                 <SectionContainer>
                     <SectionInnerContainer container direction="column">
@@ -122,6 +171,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
             </Dialog>
         </MainContainer>
     );
+
 };
 
 export default ChatPage;
+
