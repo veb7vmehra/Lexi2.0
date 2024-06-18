@@ -1,6 +1,7 @@
 import { MessageType } from '@root/models/AppModels';
 import { ApiPaths } from '../constants';
 import axiosInstance from './AxiosInstance';
+import { useConversationId } from '@hooks/useConversationId';
 
 const serialize = (obj) =>
     Object.keys(obj)
@@ -86,7 +87,17 @@ export const getConversation = async (conversationId: string): Promise<MessageTy
         const response = await axiosInstance.get(
             `/${ApiPaths.CONVERSATIONS_PATH}/conversation?conversationId=${conversationId}`,
         );
+        //console.log(response["conversationMetaData"])
         return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const sendSnap = async (image: string, conversationId: string): Promise<void> => {
+    try {
+        await axiosInstance.post(`/${ApiPaths.CONVERSATIONS_PATH}/sendSnap`, { image: image, conversationId: conversationId })
+        console.log('Frame sent successfully')
     } catch (error) {
         throw error;
     }

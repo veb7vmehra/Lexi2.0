@@ -45,6 +45,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                   topPEnabled: editAgent.topP !== null,
                   frequencyPenaltyEnabled: editAgent.frequencyPenalty !== null,
                   presencePenaltyEnabled: editAgent.presencePenalty !== null,
+                  cameraCaptureRate: editAgent.cameraCaptureRate !== null,
               }
             : initialSlidersEnabled,
     );
@@ -240,6 +241,14 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 2,
                 0.01,
                 slidersEnabled.presencePenaltyEnabled,
+            )}
+            {renderSlider(
+                'cameraCaptureRate',
+                'cameraCaptureRate',
+                5,
+                50,
+                1,
+                slidersEnabled.cameraCaptureRateEnabled,
             )}
             <ChipsInput
                 list={agent.stopSequences}

@@ -59,6 +59,7 @@ export interface AgentType {
     topP: number;
     frequencyPenalty: number;
     presencePenalty: number;
+    cameraCaptureRate: number;
     stopSequences: { value: string; id: string }[];
 }
 

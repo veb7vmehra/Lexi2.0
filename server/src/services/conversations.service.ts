@@ -24,8 +24,14 @@ class ConversationsService {
             this.getConversation(conversationId),
             this.getConversationMetadata(conversationId),
         ]);
-        const messages: any[] = this.getConversationMessages(metadataConversation.agent, conversation, message);
-        const chatRequest = this.getChatRequest(metadataConversation.agent, messages);
+        //console.log(metadataConversation.agent);
+        const agent = JSON.parse(JSON.stringify(metadataConversation.agent));
+        //const { cameraCaptureRate, ...agentWithoutCameraCaptureRate } = agent;
+        delete agent.cameraCaptureRate;
+        //console.log("HELLO");
+        //console.log(agent);
+        const messages: any[] = this.getConversationMessages(agent, conversation, message);
+        const chatRequest = this.getChatRequest(agent, messages);
         await this.createMessageDoc(message, conversationId, conversation.length + 1);
 
         let assistantMessage = '';
@@ -85,7 +91,7 @@ class ConversationsService {
 
     getConversation = async (conversationId: string) => {
         const conversation = await ConversationsModel.find({ conversationId }, { _id: 0, role: 1, content: 1 });
-
+        //console.log(conversation)
         return conversation;
     };
 
@@ -175,6 +181,7 @@ class ConversationsService {
         if (agent.topP) chatCompletionsReq['top_p'] = agent.topP;
         if (agent.temperature) chatCompletionsReq['temperature'] = agent.temperature;
         if (agent.presencePenalty) chatCompletionsReq['presence_penalty'] = agent.presencePenalty;
+        if (agent.cameraCaptureRate) chatCompletionsReq['cameraCaptureRate'] = agent.cameraCaptureRate;
         if (agent.stopSequences) chatCompletionsReq['stop'] = agent.stopSequences;
 
         return chatCompletionsReq;

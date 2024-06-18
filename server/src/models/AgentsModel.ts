@@ -16,6 +16,7 @@ export const agentsSchema = new Schema<IAgent>(
         topP: { type: Number },
         frequencyPenalty: { type: Number },
         presencePenalty: { type: Number },
+        cameraCaptureRate: {type: Number },
         stopSequences: { type: [String] },
     },
     { versionKey: false },

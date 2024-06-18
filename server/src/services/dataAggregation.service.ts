@@ -22,6 +22,7 @@ const agentsSheetCol = [
     { header: 'Top P', key: 'topP' },
     { header: 'Frequency Penalty', key: 'frequencyPenalty' },
     { header: 'Presence Penalty', key: 'presencePenalty' },
+    { header: 'Camera Capture Rate', key: 'cameraCaptureRate'},
     { header: 'Stop Sequences', key: 'stopSequences' },
 ];
 
@@ -138,6 +139,7 @@ class DataAggregationService {
                 topP: agent.condition.topP,
                 frequencyPenalty: agent.condition.frequencyPenalty,
                 presencePenalty: agent.condition.presencePenalty,
+                cameraCaptureRate: agent.condition.cameraCaptureRate,
                 stopSequences: agent.condition.stopSequences,
             });
 

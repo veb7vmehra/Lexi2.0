@@ -16,6 +16,7 @@ import { AgentsModel } from '../models/AgentsModel';
 //     topP: number;
 //     frequencyPenalty: number;
 //     presencePenalty: number;
+//     cameraCaptureRate: number;
 //     stopSequences: string[];
 // }
 

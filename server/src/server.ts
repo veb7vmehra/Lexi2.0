@@ -35,7 +35,9 @@ const createAdminUser = (username: string, password: string) => {
 
 const setupServer = () => {
     const app = express();
-    app.use(bodyParser.json());
+    app.use(bodyParser.json({ limit: '50mb' }));
+    app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
     const corsOptions = {
         origin: process.env.FRONTEND_URL,
         credentials: true,
