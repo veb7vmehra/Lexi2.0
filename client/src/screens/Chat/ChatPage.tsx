@@ -5,6 +5,7 @@ import LoadingPage from '@components/common/LoadingPage';
 import SurveyComponent from '@components/forms/survey-form/SurveyForm';
 import { SnackbarStatus, useSnackbar } from '@contexts/SnackbarProvider';
 import { useConversationId } from '@hooks/useConversationId';
+import { useExperimentId } from '@hooks/useExperimentId';
 import useEffectAsync from '@hooks/useEffectAsync';
 import { Dialog, Grid, useMediaQuery } from '@mui/material';
 import theme from '@root/Theme';
@@ -36,6 +37,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const questionnaireLink = 'https://docs.google.com/forms/u/0/?tgif=d&ec=asw-forms-hero-goto';
     const conversationId = useConversationId();
+    const experimentId = useExperimentId();
     const [cameraAccess, setCameraAccess] = useState(false);
     const webcamRef = useRef(null);
 
@@ -72,7 +74,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
             const imageSrc = webcamRef.current.getScreenshot({ width: 1280, height: 720 });
             console.log(imageSrc);
             if (imageSrc && imageSrc.startsWith('data:image/')) {
-                sendSnap(imageSrc, conversationId);
+                sendSnap(imageSrc, conversationId, experimentId);
             }
             /*else {
                 console.error('No image source available or invalid format', imageSrc);
