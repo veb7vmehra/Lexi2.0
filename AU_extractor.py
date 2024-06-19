@@ -39,7 +39,13 @@ class ChildFolderHandler(FileSystemEventHandler):
 
 def process_child_folder(child_folder):
     child_folder_name = os.path.basename(child_folder)
-    output_csv = os.path.join(csv_output_dir, f"{child_folder_name}.csv")
+    child_folder_name = child_folder_name.split("_")
+    output_csv = os.path.join(csv_output_dir, child_folder_name[1])
+    if os.path.isdir(output_csv):
+        pass
+    else:
+        os.mkdir(output_csv)
+    output_csv = os.path.join(output_csv, f"{child_folder_name[0]}.csv")
     print(output_csv)
     last_image_time = time.time()
 
