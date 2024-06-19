@@ -36,7 +36,7 @@ Before setting up the project, you'll need a MongoDB database. You can set this 
 ### Step 2: Clone the Repository
 
 ```bash
-git clone https://github.com/Tomer-Lavan/Lexi
+git clone https://github.com/veb7vmehra/Lexi2.0.git
 ```
 
 ### Step 3: Install Dependencies
@@ -109,7 +109,7 @@ Interested in contributing? We value your input and contributions! Please read o
 
 ## 🔗 Useful Links
 
-- [Project Homepage](https://www.cam.ac.uk/)
+- [Project Homepage](https://www.lexi.network/project-overview)
 - [Research Paper](#) (Link to related research papers or articles)
 
 ## 📄 License
@@ -118,7 +118,7 @@ This project is licensed under the [CC BY-NC-ND 4.0 DEED License](LICENSE.md).
 
 ## 📞 Contact
 
-For any inquiries or further information, reach out to us at [gl538@cam.ac.uk](mailto:gl538@cam.ac.uk).
+For any inquiries or further information, reach out to us at [veb7vmehra@gmail.com](mailto:veb7vmehra@gmail.com).
 
 ## 👍 Show Your Support
 
