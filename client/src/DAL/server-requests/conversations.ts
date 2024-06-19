@@ -94,9 +94,9 @@ export const getConversation = async (conversationId: string): Promise<MessageTy
     }
 };
 
-export const sendSnap = async (image: string, conversationId: string): Promise<void> => {
+export const sendSnap = async (image: string, conversationId: string, experimentId: string): Promise<void> => {
     try {
-        await axiosInstance.post(`/${ApiPaths.CONVERSATIONS_PATH}/sendSnap`, { image: image, conversationId: conversationId })
+        await axiosInstance.post(`/${ApiPaths.CONVERSATIONS_PATH}/sendSnap`, { image: image, conversationId: conversationId, experimentId: experimentId })
         console.log('Frame sent successfully')
     } catch (error) {
         throw error;

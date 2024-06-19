@@ -6,6 +6,7 @@ import { requestHandler } from '../utils/requestHandler';
 import * as path from 'path';
 const fs = require('fs');
 import { format } from 'date-fns';
+import { TimeSeriesAggregationType } from 'redis';
 
 async function checkFolderExists(folderPath: string): Promise<boolean> {
     try {
@@ -25,14 +26,15 @@ class ConvesationsController {
 
 
     sendSnap = requestHandler(async (req: Request, res: Response) => {
-        console.log("I am in function");
+        //console.log("I am in function");
         try{
-            console.log("Hello world");
-            const { image, conversationId }: { image, conversationId: string } = req.body;
-            const folderPath = path.join("webcamBase/", conversationId);
+            //console.log("Hello world");
+            const { image, conversationId, experimentId }: { image, conversationId: string , experimentId: string} = req.body;
+            const temp = `${conversationId}_${experimentId}`;
+            const folderPath = path.join("webcamBase/", temp);
             const now = new Date();
             const formattedDateTime = format(now, 'yyyyMMddHHmmss');
-            console.log('Image data:', image);
+            //console.log('Image data:', image);
             const parts = image.split(',');
             if (parts.length < 2) {
                 console.error('Invalid base64 image data');
@@ -40,8 +42,8 @@ class ConvesationsController {
             }
             const base64Data = parts[1];
             // Debug: Check base64 string
-            console.log(base64Data.length); // Should be a large number
-            console.log(base64Data.substring(0, 30)); // Check first few characters
+            //console.log(base64Data.length); // Should be a large number
+            //console.log(base64Data.substring(0, 30)); // Check first few characters
 
             // Convert to buffer
             const buffer = Buffer.from(base64Data, 'base64');
