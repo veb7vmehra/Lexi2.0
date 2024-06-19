@@ -10,3 +10,5 @@ coverage
 .settings/
 /client/node_modules
 /client/build
+/webcamBase/
+/action_units/
