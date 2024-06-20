@@ -1,5 +1,6 @@
 import { ApiPaths } from '../constants';
 import axiosInstance from './AxiosInstance';
+import { saveAs } from 'file-saver';
 
 export const downloadExperimentJSON = async (experimentId: string, title: string): Promise<void> => {
     try {
@@ -12,6 +13,20 @@ export const downloadExperimentJSON = async (experimentId: string, title: string
         });
 
         downloadFile(file, title, 'json');
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const downloadFolderAsZip = async (folderName: string): Promise<void> => {
+    try {
+        const response = await axiosInstance.get(`/${ApiPaths.FOLDER_DOWNLOAD_PATH}?folderName=${folderName}`, {
+            responseType: 'blob',
+        });
+
+        const file = new Blob([response.data], { type: 'application/zip' });
+
+        saveAs(file, `${folderName}.zip`);
     } catch (error) {
         throw error;
     }

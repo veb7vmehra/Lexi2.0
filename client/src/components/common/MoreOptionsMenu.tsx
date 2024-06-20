@@ -58,6 +58,17 @@ export const MoreOptionsMenu = ({
             </ListItemIcon>
             <ListItemText>Download Excel</ListItemText>
         </MenuItem>
+        <MenuItem
+            onClick={() => {
+                onMenuClose();
+                handleMenuAction('downloadAU');
+            }}
+        >
+            <ListItemIcon>
+                <DownloadIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Download Action Units</ListItemText>
+        </MenuItem>
         {/* Add more menu items here if needed */}
     </Menu>
 );
