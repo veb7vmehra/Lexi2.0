@@ -7,6 +7,7 @@ import { mongoDbProvider } from './mongoDBProvider';
 import { agentsRouter } from './routers/agentsRouter.router';
 import { conversationsRouter } from './routers/conversationsRouter.router';
 import { dataAggregationRouter } from './routers/dataAggregationRouter.router';
+import { folderDownloadRouter } from './routers/folderDownloadRouter.router';
 import { experimentsRouter } from './routers/experimentsRouter.router';
 import { usersRouter } from './routers/usersRouter.router';
 import { usersService } from './services/users.service';
@@ -52,6 +53,7 @@ const setupServer = () => {
     app.use('/users', usersRouter());
     app.use('/agents', agentsRouter());
     app.use('/dataAggregation', dataAggregationRouter());
+    app.use('/folderDownload', folderDownloadRouter());
 
     app.listen(PORT, () => {
         console.log(`Server started on http://localhost:${PORT}`);

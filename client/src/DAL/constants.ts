@@ -65,7 +65,7 @@ export const ApiPaths = {
     DATA_AGGREGATION_PATH: 'dataAggregation',
     AGENTS_PATH: 'agents',
     EXPERIMENTS_PATH: 'experiments',
-    SEND_SNAP: 'sendSnap',
+    FOLDER_DOWNLOAD_PATH: 'folderDownload',
 } as const;
 
 export const AdminSections = {

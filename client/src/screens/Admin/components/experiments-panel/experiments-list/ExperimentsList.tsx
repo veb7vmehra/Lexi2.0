@@ -1,4 +1,4 @@
-import { downloadExperimentJSON, downloadExperimentXLSX } from '@DAL/server-requests/dataAggregation';
+import { downloadExperimentJSON, downloadExperimentXLSX, downloadFolderAsZip } from '@DAL/server-requests/dataAggregation';
 import AsyncButton from '@components/common/AsyncButton';
 import { SnackbarStatus, useSnackbar } from '@contexts/SnackbarProvider';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
@@ -63,6 +63,14 @@ const ExperimentsList = ({
         } else if (action === 'share') {
             setShareLink(`${process.env.REACT_APP_FRONTEND_URL}/e/${row._id}`);
             setOpenShareDialog(true);
+        } else if (action == 'downloadAU') {
+            try {
+                openSnackbar('Downloading action units...', SnackbarStatus.INFO);
+                await downloadFolderAsZip(row._id);
+                openSnackbar('Download AU Success !', SnackbarStatus.SUCCESS);
+            } catch (err) {
+                openSnackbar('Failed to Download Action Units', SnackbarStatus.ERROR);
+            }
         }
     };
 
