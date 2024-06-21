@@ -4,6 +4,7 @@ const fs = require("fs");
 const readline = require("readline");
 const { execSync } = require("child_process");
 const crypto = require("crypto");
+const path = require('path');
 
 const colors = {
   reset: "\x1b[0m",
@@ -27,6 +28,22 @@ const rl = readline.createInterface({
 
 const ask = (question) =>
   new Promise((resolve) => rl.question(question, resolve));
+
+function createFolder(folderPath) {
+  // Check if the folder already exists
+  if (!fs.existsSync(folderPath)) {
+      // Create the directory
+      fs.mkdirSync(folderPath, { recursive: true });
+      console.log(`Directory created: ${folderPath}`);
+  } else {
+      console.log(`Directory already exists: ${folderPath}`);
+  }
+}
+
+const foldersToCreate = [
+  'action_units',
+  'webcamBase'
+];
 
 (async function setup() {
   console.log(
@@ -72,6 +89,11 @@ const ask = (question) =>
     `${emojis.success} .env file created successfully.`,
     colors.reset
   );
+
+  foldersToCreate.forEach(folder => {
+    const fullPath = path.join(__dirname, folder);
+    createFolder(fullPath);
+  });
 
   console.log(
     colors.cyan,
