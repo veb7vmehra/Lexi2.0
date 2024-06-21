@@ -101,7 +101,7 @@ Run the following command inside the Lexi2.0 folder from terminal.
 pip install -r requirements.txt
 ```
 
-### Step 4: Running the Project
+### Step 6: Running the Project
 
 - For the Client:
     ```bash
