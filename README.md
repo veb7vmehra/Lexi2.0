@@ -18,7 +18,8 @@ To set up and start using the project, follow these steps:
 
 Node.JS - <a href="https://nodejs.org/en">https://nodejs.org/en</a><br>
 Npm - <a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm">https://docs.npmjs.com/downloading-and-installing-node-js-and-npm</a><br>
-Git - <a href ="https://git-scm.com/downloads">https://git-scm.com/downloads</a>
+Git - <a href ="https://git-scm.com/downloads">https://git-scm.com/downloads</a><br>
+Python 3 - <a href ="https://www.python.org/downloads/">https://www.python.org/downloads/<br>
 OpenAI api key - <a href ="https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key">OpenAI api key info</a>
 
 ### Step 1: Set Up MongoDB Database
@@ -80,6 +81,26 @@ The setup script automates several important tasks to get your server up and run
 
 This comprehensive setup ensures that all necessary components are correctly configured, laying the foundation for a smooth and efficient operation of the server.
 
+### Step 4: Setting up openFace
+
+The current [openFace](https://github.com/TadasBaltrusaitis/OpenFace) version downloaded with this github contains windows exe files, for linux and macOS, you can follow the following steps:
+
+- [Installastion steps for Unix](https://github.com/TadasBaltrusaitis/OpenFace/wiki/Unix-Installation)
+- [Installation steps for MacOS](https://github.com/TadasBaltrusaitis/OpenFace/wiki/Mac-installation)
+- Make sure to install openFace inside the Lexi2.0 folder and rename the openface folder to "openFace".
+
+If you haven't until now, irrespective of your OS, run the download_models.ps1 (for Windows) or download_models.sh (for Unix and MacOS), you can find these scripts inside the openFace folder. After which create the following folders:
+
+- An empty folder inside server folder titled "webcamBase"
+- An empty folder inside server folder titled "action-units"
+
+### Step 5: Install pip requirements
+
+Run the following command inside the Lexi2.0 folder from terminal.
+```bash
+pip install -r requirements.txt
+```
+
 ### Step 4: Running the Project
 
 - For the Client:
@@ -96,6 +117,11 @@ This comprehensive setup ensures that all necessary components are correctly con
     npm run dev
     ``` 
 **server will run on: http://localhost:5000**
+
+- For action unit extaction:
+  ```bash
+  python AU_extractor.py
+  ```
 
 Encountering difficulties with your local environment setup? Consult our [Troubleshooting Guide](TROUBLESHOOTING.md) for assistance in resolving your issues.
 
