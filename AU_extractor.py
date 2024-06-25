@@ -67,14 +67,14 @@ def process_child_folder(child_folder):
         for file in os.listdir(child_folder):
             file_path = os.path.join(child_folder, file)
             if os.path.isfile(file_path) and (file.endswith(".jpg") or file.endswith(".png")):
-                process_image(file_path, output_csv)
+                process_image(file_path, output_csv, current_time)
                 chmod_fix(file_path)
                 os.remove(file_path)
                 last_image_time = current_time
 
         time.sleep(1)  # Check for new images every second
 
-def process_image(image_path, output_csv):
+def process_image(image_path, output_csv, current_time):
     output_dir = os.path.join(os.path.dirname(image_path), "temp_output")
     os.makedirs(output_dir, exist_ok=True)
 
@@ -90,6 +90,7 @@ def process_image(image_path, output_csv):
         print("working 2")
         df = pd.read_csv(output_file)
         df['filename'] = os.path.basename(image_path)
+        df['timeStamp'] = time.ctime(int(current_time))
         if not os.path.exists(output_csv):
             df.to_csv(output_csv, index=False)
             print("file written")
