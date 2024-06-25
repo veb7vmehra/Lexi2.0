@@ -5,6 +5,15 @@ import pandas as pd
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import threading
+from FaceChannel.FaceChannelV1.FaceChannelV1 import FaceChannelV1
+from FaceChannel.FaceChannelV1.imageProcessingUtil import imageProcessingUtil
+import cv2
+import numpy
+faceChannelDim = FaceChannelV1("Dim", loadModel=True)
+
+imageProcessing = imageProcessingUtil()
+
+faceSize = (64,64) # Input size for both models: categorical and dimensional
 
 # Path to the parent folder
 parent_folder = "./server/webcamBase"
@@ -52,7 +61,7 @@ def process_child_folder(child_folder):
     while True:
         current_time = time.time()
         if current_time - last_image_time > 20:
-            print("we are here now")
+            #print("we are here now")
             # No new images for more than 5 seconds, delete the folder and exit
             for file in os.listdir(child_folder):
                 file_path = os.path.join(child_folder, file)
@@ -60,7 +69,7 @@ def process_child_folder(child_folder):
                     #shutil.rmtree(file_path, ignore_errors=False, onerror=handleRemoveReadonly)
                     chmod_fix(file_path)
                     os.remove(file_path)
-            print("we should've been here too")
+            print("One conversation completed")
             shutil.rmtree(child_folder, ignore_errors=False, onerror=handleRemoveReadonly)
             break
 
@@ -81,6 +90,12 @@ def process_image(image_path, output_csv, current_time):
     # Run OpenFace FeatureExtraction tool
     subprocess.run([openface_exe, "-f", image_path, "-out_dir", output_dir])
     print("working 1")
+    frame = cv2.imread(image_path)
+    # detect faces
+    facePoints, face = imageProcessing.detectFace(frame)
+    face = imageProcessing.preProcess(face, faceSize)
+    # Obtain dimensional classification
+    dimensionalRecognition = numpy.array(faceChannelDim.predict(face, preprocess=False))
     # Read the generated CSV file
     csv_name = os.path.basename(image_path)
     csv_name = csv_name[:-4]
@@ -89,14 +104,16 @@ def process_image(image_path, output_csv, current_time):
     if os.path.exists(output_file):
         print("working 2")
         df = pd.read_csv(output_file)
+        df['arousal'] = dimensionalRecognition[0][0][0]
+        df['valence'] = dimensionalRecognition[1][0][0]
         df['filename'] = os.path.basename(image_path)
         df['timeStamp'] = time.ctime(int(current_time))
         if not os.path.exists(output_csv):
             df.to_csv(output_csv, index=False)
-            print("file written")
+            #print("file written")
         else:
             df.to_csv(output_csv, mode='a', header=False, index=False)
-            print("file written")
+            #print("file written")
 
     # Clean up temporary output directory
     """
