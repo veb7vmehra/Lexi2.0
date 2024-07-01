@@ -105,7 +105,7 @@ const TopBar: React.FC<TopBarProps> = (props) => {
                     {location.pathname === Pages.PROJECT_OVERVIEW && (
                         <IconButton
                             color="inherit"
-                            href="https://github.com/Tomer-Lavan/Lexi"
+                            href="https://github.com/veb7vmehra/Lexi2.0"
                             sx={{ textTransform: 'none' }}
                         >
                             <GitHubIcon style={{ fontSize: isLargerThanLaptop ? 40 : 28 }} />

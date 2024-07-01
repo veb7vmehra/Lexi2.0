@@ -14,7 +14,7 @@ import {
 const ProjectOverview: React.FC = () => {
     const navigate = useNavigate();
     const handleGitHubRedirect = () => {
-        window.location.href = 'https://github.com/Tomer-Lavan/Lexi';
+        window.location.href = 'https://github.com/veb7vmehra/Lexi2.0';
     };
 
     const handleAdminRedirect = () => {
