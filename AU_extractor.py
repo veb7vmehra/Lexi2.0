@@ -9,6 +9,22 @@ from FaceChannel.FaceChannelV1.FaceChannelV1 import FaceChannelV1
 from FaceChannel.FaceChannelV1.imageProcessingUtil import imageProcessingUtil
 import cv2
 import numpy
+from pymongo import MongoClient
+from dotenv import load_dotenv
+import dns
+
+env_path = './server/.env'
+
+load_dotenv(dotenv_path=env_path)
+
+mongo_uri = os.getenv("MONGODB_URL")
+database_name = os.getenv("MONGODB_DB_NAME")
+collection_name = "current_state"
+
+client = MongoClient(mongo_uri)
+mongo_db = client[database_name]
+collection = mongo_db[collection_name]
+
 faceChannelDim = FaceChannelV1("Dim", loadModel=True)
 
 imageProcessing = imageProcessingUtil()
@@ -33,6 +49,34 @@ def handleRemoveReadonly(func, path, exc):
   else:
       raise
 
+def add_or_update_data(id_value, data):
+    try:
+        # Check if the document with the specified id exists
+        existing_document = collection.find_one({"id": id_value})
+
+        if existing_document:
+            # If the document exists, update the existing data
+            updated_valence = existing_document["valence"] + data[0]
+            updated_arousal = existing_document["arousal"] + data[1]
+            count = existing_document["count"] + 1
+            result = collection.update_one(
+                {"id": id_value},
+                {"$set": {"valence": updated_valence, "arousal": updated_arousal, "count": count}}
+            )
+            if result.modified_count > 0:
+                print(f"Updated data for id '{id_value}': valence={updated_valence}, arousal={updated_arousal}")
+            else:
+                print(f"Failed to update data for id '{id_value}'.")
+        else:
+            # If the document does not exist, insert new data
+            result = collection.insert_one({"id": id_value, "valence": data[0], "arousal": data[1], "count": 1})
+            if result.inserted_id:
+                print(f"Inserted new data for id '{id_value}': valence={data[0]}, arousal={data[1]}")
+            else:
+                print(f"Failed to insert data for id '{id_value}'.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 class ChildFolderHandler(FileSystemEventHandler):
     def __init__(self):
         super().__init__()
@@ -54,6 +98,7 @@ def process_child_folder(child_folder):
         pass
     else:
         os.mkdir(output_csv)
+    mongo_key = child_folder_name[0]
     output_csv = os.path.join(output_csv, f"{child_folder_name[0]}.csv")
     print(output_csv)
     last_image_time = time.time()
@@ -76,14 +121,14 @@ def process_child_folder(child_folder):
         for file in os.listdir(child_folder):
             file_path = os.path.join(child_folder, file)
             if os.path.isfile(file_path) and (file.endswith(".jpg") or file.endswith(".png")):
-                process_image(file_path, output_csv, current_time)
+                process_image(file_path, output_csv, current_time, mongo_key)
                 chmod_fix(file_path)
                 os.remove(file_path)
                 last_image_time = current_time
 
         time.sleep(1)  # Check for new images every second
 
-def process_image(image_path, output_csv, current_time):
+def process_image(image_path, output_csv, current_time, mongo_key):
     output_dir = os.path.join(os.path.dirname(image_path), "temp_output")
     os.makedirs(output_dir, exist_ok=True)
 
@@ -101,6 +146,7 @@ def process_image(image_path, output_csv, current_time):
     csv_name = csv_name[:-4]
     output_file = os.path.join(output_dir, f"{csv_name}.csv")
     print(output_file)
+    data_to_send = []
     if os.path.exists(output_file):
         print("working 2")
         df = pd.read_csv(output_file)
@@ -108,6 +154,11 @@ def process_image(image_path, output_csv, current_time):
         df['valence'] = dimensionalRecognition[1][0][0]
         df['filename'] = os.path.basename(image_path)
         df['timeStamp'] = time.ctime(int(current_time))
+        data_to_send.append(float(dimensionalRecognition[1][0][0]))
+        data_to_send.append(float(dimensionalRecognition[0][0][0]))
+
+        add_or_update_data(mongo_key, data_to_send)
+
         if not os.path.exists(output_csv):
             df.to_csv(output_csv, index=False)
             #print("file written")

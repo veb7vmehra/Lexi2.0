@@ -8,6 +8,8 @@ export interface IConversation {
     createdAt: Date;
     timestamp: number;
     messageNumber: number;
+    valence: number;
+    arousal: number;
 }
 
 export interface IMetadataConversation {
@@ -24,3 +26,11 @@ export interface IMetadataConversation {
     imsPre?: object;
     imsPost?: object;
 }
+
+export interface ICurrentState {
+    id: string;
+    valence: number;
+    arousal: number;
+    count: number;
+}
+
