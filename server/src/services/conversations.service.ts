@@ -6,6 +6,7 @@ import { ConversationsModel } from '../models/ConversationsModel';
 import { MetadataConversationsModel } from '../models/MetadataConversationsModel';
 import { experimentsService } from './experiments.service';
 import { usersService } from './users.service';
+import { CurrentStateModels } from '../models/CurrentStateModels';
 
 dotenv.config();
 
@@ -28,8 +29,13 @@ class ConversationsService {
         const agent = JSON.parse(JSON.stringify(metadataConversation.agent));
         //const { cameraCaptureRate, ...agentWithoutCameraCaptureRate } = agent;
         delete agent.cameraCaptureRate;
-        //console.log("HELLO");
+        console.log("HELLO");
+        const cst = await CurrentStateModels.find({}).exec();
+        console.log(cst); // Should print all documents in the collection
+        console.log("Veb");
         //console.log(agent);
+        const current_state = await this.getCurrentState(conversationId)
+        console.log(current_state)
         const messages: any[] = this.getConversationMessages(agent, conversation, message);
         const chatRequest = this.getChatRequest(agent, messages);
         await this.createMessageDoc(message, conversationId, conversation.length + 1);
@@ -93,6 +99,18 @@ class ConversationsService {
         const conversation = await ConversationsModel.find({ conversationId }, { _id: 0, role: 1, content: 1 });
         //console.log(conversation)
         return conversation;
+    };
+
+    getCurrentState = async (conversationId: string) => {
+        try {
+            console.log("HELLO2");
+            const current_state = await CurrentStateModels.find({ id: conversationId }).exec();
+            console.log(current_state);
+            return current_state;
+        } catch (err) {
+            console.error(err);
+            return null;
+        }
     };
 
     updateIms = async (conversationId: string, imsValues, isPreConversation: boolean) => {

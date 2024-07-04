@@ -6,6 +6,8 @@ export const agentsRouter = () => {
     router.post('/', agentsController.saveAgent);
     router.get('/', agentsController.getAgents);
     router.put('/', agentsController.updateAgent);
+    router.get('/download-sample', agentsController.downloadSample);
+    router.post('/upload-rulesheet', agentsController.uploadRuleSheet);
 
     return router;
 };

@@ -1,5 +1,5 @@
 import { agentsOptions, defaultSettings, defaultSliderSettings, initialSlidersEnabled } from '@DAL/constants';
-import { saveAgent, updateAgent } from '@DAL/server-requests/agents';
+import { saveAgent, updateAgent, downloadSample, uploadRuleSheet } from '@DAL/server-requests/agents';
 import { ChipsInput } from '@components/common/ChipsInput';
 import { SnackbarStatus, useSnackbar } from '@contexts/SnackbarProvider';
 import { AgentType } from '@models/AppModels';
@@ -14,6 +14,7 @@ import {
     Slider,
     TextField,
     Typography,
+    Button,
 } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { MainContainer, SaveButton } from './AgentForm.s';
@@ -99,6 +100,20 @@ const AgentForm: React.FC<AgentFormProps> = ({
     const handleSliderChange = (newValue: number | number[], field: string) => {
         setAgent({ ...agent, [field]: newValue });
     };
+
+    
+    const handleFileUpload = async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            try {
+                await uploadRuleSheet(file);
+                openSnackbar('File uploaded successfully!', SnackbarStatus.SUCCESS);
+            } catch (error) {
+                openSnackbar('File upload failed', SnackbarStatus.ERROR);
+            }
+        }
+    };
+    
 
     const renderSlider = (
         field: string,
@@ -249,6 +264,22 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 50,
                 1,
                 slidersEnabled.cameraCaptureRateEnabled,
+            )}
+            {slidersEnabled.cameraCaptureRateEnabled && (
+                <Box display="flex" justifyContent="space-between" margin="normal">
+                    <Button variant="outlined" onClick={downloadSample}>
+                        Download Sample of Rules
+                    </Button>
+                    <Button variant="outlined" component="label">
+                        Upload Rulesheet
+                        <input
+                            type="file"
+                            accept=".csv"
+                            hidden
+                            onChange={handleFileUpload}
+                        />
+                    </Button>
+                </Box>
             )}
             <ChipsInput
                 list={agent.stopSequences}

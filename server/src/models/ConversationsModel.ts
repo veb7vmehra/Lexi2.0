@@ -10,6 +10,8 @@ export const conversationSchema = new Schema<IConversation>(
         createdAt: { type: Date, default: Date.now },
         timestamp: { type: Number, default: () => Date.now() },
         messageNumber: { type: Number, required: true },
+        valence: { type: Number, default: 0, required: true },
+        arousal: { type: Number, default: 0, required: true },
     },
     { versionKey: false },
 );
