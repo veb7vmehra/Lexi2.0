@@ -7,6 +7,7 @@ import { MetadataConversationsModel } from '../models/MetadataConversationsModel
 import { experimentsService } from './experiments.service';
 import { usersService } from './users.service';
 import { CurrentStateModels } from '../models/CurrentStateModels';
+import { validate } from 'uuid';
 
 dotenv.config();
 
@@ -29,16 +30,14 @@ class ConversationsService {
         const agent = JSON.parse(JSON.stringify(metadataConversation.agent));
         //const { cameraCaptureRate, ...agentWithoutCameraCaptureRate } = agent;
         delete agent.cameraCaptureRate;
-        console.log("HELLO");
-        const cst = await CurrentStateModels.find({}).exec();
-        console.log(cst); // Should print all documents in the collection
-        console.log("Veb");
-        //console.log(agent);
         const current_state = await this.getCurrentState(conversationId)
-        console.log(current_state)
-        const messages: any[] = this.getConversationMessages(agent, conversation, message);
+        const val = current_state[0]["valence"] / current_state[0]["count"]
+        const ar = current_state[0]["arousal"] / current_state[0]["count"]
+        console.log(current_state[0]["valence"])
+        console.log(current_state[0]["arousal"])
+        const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar);
         const chatRequest = this.getChatRequest(agent, messages);
-        await this.createMessageDoc(message, conversationId, conversation.length + 1);
+        await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar);
 
         let assistantMessage = '';
 
@@ -61,6 +60,8 @@ class ConversationsService {
             },
             conversationId,
             conversation.length + 2,
+            val,
+            ar,
         );
 
         this.updateConversationMetadata(conversationId, {
@@ -89,7 +90,10 @@ class ConversationsService {
             role: 'assistant',
             content: user.isAdmin ? agent.firstChatSentence : user.agent.firstChatSentence,
         };
-        await this.createMessageDoc(firstMessage, res._id.toString(), 1);
+        //const current_state = await this.getCurrentState(res._id.toString())
+        //const val = current_state["valence"] / current_state["count"]
+        //const ar = current_state["arousal"] / current_state["count"]
+        await this.createMessageDoc(firstMessage, res._id.toString(), 1, 0, 0);
         usersService.addConversation(userId);
 
         return res._id.toString();
@@ -103,7 +107,7 @@ class ConversationsService {
 
     getCurrentState = async (conversationId: string) => {
         try {
-            console.log("HELLO2");
+            console.log(conversationId);
             const current_state = await CurrentStateModels.find({ id: conversationId }).exec();
             console.log(current_state);
             return current_state;
@@ -160,11 +164,14 @@ class ConversationsService {
         }
     };
 
-    private getConversationMessages = (settings: any, conversation: any[], message: any) => {
+    private getConversationMessages = (settings: any, conversation: any[], message: any, val: number, ar: number) => {
         const systemPrompt: Message = { role: 'system', content: settings.systemStarterPrompt };
         const beforeUserMessage = { role: 'system', content: settings.beforeUserSentencePrompt };
         const afterUserMessage = { role: 'system', content: settings.afterUserSentencePrompt };
-
+        console.log(message)
+        const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + "while user replies to you " + message["content"]
+        message["content"] = final_message
+        console.log(message)
         const messages: any = [
             systemPrompt,
             ...conversation,
@@ -177,12 +184,14 @@ class ConversationsService {
         return messages;
     };
 
-    private createMessageDoc = async (message: Message, conversationId: string, messageNumber: number) => {
+    private createMessageDoc = async (message: Message, conversationId: string, messageNumber: number, val:number, ar:number) => {
         const res = await ConversationsModel.create({
             content: message.content,
             role: message.role,
             conversationId,
             messageNumber,
+            valence: val, 
+            arousal: ar,
         });
 
         return res;
