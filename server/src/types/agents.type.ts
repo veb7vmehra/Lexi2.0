@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 export interface IAgent {
-    _id?: mongoose.Types.ObjectId;
+    _id?: mongoose.Types.ObjectId | string;
     title: string;
     summary: string;
     systemStarterPrompt: string;
@@ -16,4 +16,11 @@ export interface IAgent {
     presencePenalty: number;
     cameraCaptureRate: number;
     stopSequences: string[];
+    createdAt: Date;
+    timestamp: number;
+}
+
+export interface IAgentLean {
+    _id?: mongoose.Types.ObjectId | string;
+    title: string;
 }

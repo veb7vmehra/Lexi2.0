@@ -12,6 +12,7 @@ export const conversationSchema = new Schema<IConversation>(
         messageNumber: { type: Number, required: true },
         valence: { type: Number, default: 0, required: true },
         arousal: { type: Number, default: 0, required: true },
+        userAnnotation: { type: Number, default: () => 0 },
     },
     { versionKey: false },
 );
