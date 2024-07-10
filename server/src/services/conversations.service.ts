@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { OpenAI } from 'openai';
 import { IAgent } from 'src/types';
 import { ConversationsModel } from '../models/ConversationsModel';
+import { ExplainableModel } from '../models/ExplainableModel';
 import { MetadataConversationsModel } from '../models/MetadataConversationsModel';
 import { experimentsService } from './experiments.service';
 import { usersService } from './users.service';
@@ -40,6 +41,7 @@ class ConversationsService {
         await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar);
 
         let assistantMessage = '';
+        let streamExplainable = streamResponse;
 
         if (!streamResponse) {
             const response = await openai.chat.completions.create(chatRequest);
@@ -68,6 +70,36 @@ class ConversationsService {
             $inc: { messagesNumber: 1 },
             $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
         });
+
+        const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar);
+        const ExchatRequest = this.getChatRequest(agent, messages);
+
+        let ExassistantMessage = '';        
+
+        if (true) {
+            const response = await openai.chat.completions.create(ExchatRequest);
+            ExassistantMessage = response.choices[0].message.content?.trim();
+        } 
+        /*else {
+            const responseStream = await openai.chat.completions.create({ ...ExchatRequest, stream: true });
+            for await (const partialResponse of responseStream) {
+                const assistantMessagePart = partialResponse.choices[0]?.delta?.content || '';
+                await streamResponse(assistantMessagePart);
+                ExassistantMessage += assistantMessagePart;
+            }
+        }*/
+
+        await this.createExplainableDoc(
+            message,
+            {
+                content: ExassistantMessage,
+                role: 'assistant',
+            },
+            conversationId,
+            conversation.length + 2,
+            val,
+            ar,
+        );
 
         return assistantMessage;
     };
@@ -184,10 +216,45 @@ class ConversationsService {
         return messages;
     };
 
+    private getExplainableText = (settings: any, conversation: any[], message: any, val: number, ar: number) => {
+        const systemPrompt: Message = { role: 'system', content: "" };
+        const beforeUserMessage = { role: 'system', content: "" };
+        const afterUserMessage = { role: 'system', content: "" };
+        //console.log(message)
+        const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + ". What do you understand from these about the emotions expressed by the user? What behavioral qualities should be displayed while responding to this user to improve their mental state?"
+        message["content"] = final_message
+        console.log(message)
+        const messages: any = [
+            systemPrompt,
+            ...conversation,
+            beforeUserMessage,
+            message,
+            afterUserMessage,
+            { role: 'assistant', content: '' },
+        ];
+
+        return messages;
+    };
+
+
     private createMessageDoc = async (message: Message, conversationId: string, messageNumber: number, val:number, ar:number) => {
         const res = await ConversationsModel.create({
             content: message.content,
             role: message.role,
+            conversationId,
+            messageNumber,
+            valence: val, 
+            arousal: ar,
+        });
+
+        return res;
+    };
+
+    private createExplainableDoc = async (message: Message, resp: Message, conversationId: string, messageNumber: number, val:number, ar:number) => {
+        const res = await ExplainableModel.create({
+            input: message.content,
+            response: resp.content,
+            role: resp.role,
             conversationId,
             messageNumber,
             valence: val, 
