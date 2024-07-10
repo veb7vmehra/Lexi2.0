@@ -12,6 +12,18 @@ export interface IConversation {
     arousal: number;
 }
 
+export interface IExplainable {
+    conversationId: string;
+    input: string;
+    response: string;
+    role: string;
+    createdAt: Date;
+    timestamp: number;
+    messageNumber: number;
+    valence: number;
+    arousal: number;
+}
+
 export interface IMetadataConversation {
     _id: mongoose.Types.ObjectId;
     experimentId: string;
