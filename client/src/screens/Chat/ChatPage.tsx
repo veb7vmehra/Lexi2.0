@@ -1,8 +1,7 @@
-import { getConversation } from '@DAL/server-requests/conversations';
+import { getConversation, updateUserAnnotation } from '@DAL/server-requests/conversations';
 import { sendSnap } from '@DAL/server-requests/conversations';
 import FinishConversationDialog from '@components/common/FinishConversationDialog';
 import LoadingPage from '@components/common/LoadingPage';
-import SurveyComponent from '@components/forms/survey-form/SurveyForm';
 import { SnackbarStatus, useSnackbar } from '@contexts/SnackbarProvider';
 import { useConversationId } from '@hooks/useConversationId';
 import { useExperimentId } from '@hooks/useExperimentId';
@@ -11,6 +10,10 @@ import { Dialog, Grid, useMediaQuery } from '@mui/material';
 import theme from '@root/Theme';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getExperimentCoversationForms, getExperimentFeatures } from '../../DAL/server-requests/experiments';
+import { ConversationForm } from '../../components/forms/conversation-form/ConversationForm';
+//import { useExperimentId } from '../../hooks/useExperimentId';
+import { UserAnnotation } from '../../models/AppModels';
 import { MainContainer, MessageListContainer, SectionContainer, SectionInnerContainer } from './ChatPage.s';
 import MessageList from './components/MessageList';
 import InputBox from './components/input-box/InputBox';
@@ -28,11 +31,16 @@ setIsFinishDialogOpen: (open: boolean) => void;
 const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDialogOpen }) => {
     const navigate = useNavigate();
     const messagesRef = useRef(null);
-    const [isPageLoading, setIsPageLoading] = useState(true);
     const { openSnackbar } = useSnackbar();
     const [messages, setMessages] = useState([]);
+    const [conversationForms, setConversationForms] = useState({
+        preConversation: null,
+        postConversation: null,
+    });
     const [messageFontSize, setMessageFontSize] = useState<'sm' | 'lg'>('lg');
     const [surveyOpen, setIsSurveyOpen] = useState(false);
+    const [isPageLoading, setIsPageLoading] = useState(true);
+    const [experimentFeatures, setExperimentFeatures] = useState(null);
     const [isMessageLoading, setIsMessageLoading] = useState(false);
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const questionnaireLink = 'https://docs.google.com/forms/u/0/?tgif=d&ec=asw-forms-hero-goto';
@@ -48,14 +56,26 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
     }, [messages]);
     
     useEffectAsync(async () => {
-        const imsAnsweredKey = `imsPreAnswered-${conversationId}`;
-        const imsAnswered = sessionStorage.getItem(imsAnsweredKey);
-        if (!imsAnswered) {
-            setIsSurveyOpen(true);
-        }
+        const preConversationFormAnsweredKey = `preConversationFormAnswered-${conversationId}`;
+        const preConversationFormAnsweredKeyAnswered = sessionStorage.getItem(preConversationFormAnsweredKey);
         try {
-            const conversation = await getConversation(conversationId);
-            setMessages(conversation["conversation"].length ? conversation["conversation"] : []);
+            const [conversation, conversationForms, experimentFeaturesRes] = await Promise.all([
+                getConversation(conversationId),
+                getExperimentCoversationForms(experimentId),
+                getExperimentFeatures(experimentId),
+            ]);
+            //console.log(conversationId, conversation)
+            if (!preConversationFormAnsweredKeyAnswered && conversationForms.preConversation) {
+                setIsSurveyOpen(true);
+            }
+            setConversationForms(conversationForms);
+            setExperimentFeatures(experimentFeaturesRes);
+            //console.log(conversation['conversation'])
+            if (Array.isArray(conversation['conversation'])) {
+                setMessages(conversation['conversation'].length ? conversation['conversation'] : []);
+              } else {
+                console.error('Invalid conversation format:', conversation['conversation']);
+              }
             setIsPageLoading(false);
             let cameraAccess = false;
             if (conversation["conversationMetaData"]["agent"]["cameraCaptureRate"] != null) {
@@ -66,13 +86,13 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
             navigate(-1);
         }
     }, []);
-    
+
     useEffectAsync(async () => {
         let intervalId;
         const captureAndSendFrame = () => {
         if (webcamRef.current) {
             const imageSrc = webcamRef.current.getScreenshot({ width: 1280, height: 720 });
-            console.log(imageSrc);
+            //console.log(imageSrc);
             if (imageSrc && imageSrc.startsWith('data:image/')) {
                 sendSnap(imageSrc, conversationId, experimentId);
             }
@@ -87,22 +107,27 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
         return () => clearInterval(intervalId);
     }, [conversationId, cameraAccess]);
     
-    const handleImsSurveyDone = () => {
-        const imsAnsweredKey = `imsPreAnswered-${conversationId}`;
-        sessionStorage.setItem(imsAnsweredKey, 'true');
+    const handlePreConversationSurveyDone = () => {
+        const preConversationFormAnsweredKey = `preConversationFormAnswered-${conversationId}`;
+        sessionStorage.setItem(preConversationFormAnsweredKey, 'true');
         setIsSurveyOpen(false);
+    };
+
+    const handleUpdateUserAnnotation = async (messageId: string, userAnnotation: UserAnnotation) => {
+        try {
+            await updateUserAnnotation(messageId, userAnnotation);
+            setMessages(
+                messages.map((message) => (message._id === messageId ? { ...message, userAnnotation } : message))
+            );
+            //console.log("Vaibhav here: ", messages)
+            //console.log("Vaibhav again: ", setMessages)
+        } catch (error) {
+            console.log(error);
+        }
     };
     
     return isPageLoading ? (
         <LoadingPage />
-    ) : isMobile && surveyOpen ? (
-        <Dialog open={surveyOpen} maxWidth={'md'} fullScreen={isMobile}>
-            <SurveyComponent
-                conversationId={conversationId}
-                isPreConversation={true}
-                handleDone={handleImsSurveyDone}
-            />
-        </Dialog>
     ) : (
         <MainContainer container>
             {!isMobile && (
@@ -141,6 +166,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
                                 messages={messages}
                                 isMessageLoading={isMessageLoading}
                                 size={messageFontSize}
+                                handleUpdateUserAnnotation={handleUpdateUserAnnotation}
+                                experimentHasUserAnnotation={experimentFeatures?.userAnnotation}
                             />
                         </MessageListContainer>
                         <Grid item display={'flex'} justifyContent={'center'}>
@@ -151,6 +178,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
                                 conversationId={conversationId}
                                 setIsMessageLoading={setIsMessageLoading}
                                 fontSize={messageFontSize}
+                                isStreamMessage={experimentFeatures?.streamMessage}
                             />
                         </Grid>
                     </SectionInnerContainer>
@@ -161,14 +189,24 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
                     open={isFinishDialogOpen}
                     setIsOpen={setIsFinishDialogOpen}
                     questionnaireLink={questionnaireLink}
-                    conversationId={conversationId}
+                    form={conversationForms.postConversation}
                 />
             )}
-            <Dialog open={surveyOpen} maxWidth={'md'} fullScreen={isMobile}>
-                <SurveyComponent
-                    conversationId={conversationId}
+            <Dialog
+                open={surveyOpen}
+                maxWidth={'lg'}
+                fullScreen={isMobile}
+                PaperProps={{
+                    style: {
+                        maxHeight: isMobile ? 'none' : '70vh',
+                        overflow: 'auto',
+                    },
+                }}
+            >
+                <ConversationForm
+                    form={conversationForms.preConversation}
                     isPreConversation={true}
-                    handleDone={handleImsSurveyDone}
+                    handleDone={handlePreConversationSurveyDone}
                 />
             </Dialog>
         </MainContainer>

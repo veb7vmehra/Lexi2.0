@@ -18,6 +18,8 @@ export const agentsSchema = new Schema<IAgent>(
         presencePenalty: { type: Number },
         cameraCaptureRate: {type: Number },
         stopSequences: { type: [String] },
+        createdAt: { type: Date, default: Date.now },
+        timestamp: { type: Number, default: () => Date.now() },
     },
     { versionKey: false },
 );

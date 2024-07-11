@@ -21,6 +21,7 @@ import {
     Typography,
 } from '@mui/material';
 import { useState } from 'react';
+import { ExperimentType } from '../../../../../models/AppModels';
 import { ExperimentRow } from '../experiment-row/ExperimentRow';
 import { ColumnTitle, ListBox, TablePaper } from './ExperimentsList.s';
 
@@ -35,11 +36,12 @@ const ExperimentsList = ({
     setOpenExperimentFormDialog,
     isLoadingStatusChange,
     isLoadingExperiments,
+    setOpenDeleteExpDialog,
 }) => {
     const { openSnackbar } = useSnackbar();
     const [openShareDialog, setOpenShareDialog] = useState(false);
     const [shareLink, setShareLink] = useState('');
-    const handleMenuAction = async (action: string, row) => {
+    const handleMenuAction = async (action: string, row: ExperimentType) => {
         if (action === 'edit') {
             setEditExperiment(row);
             setIsEditMode(true);
@@ -71,6 +73,9 @@ const ExperimentsList = ({
             } catch (err) {
                 openSnackbar('Failed to Download Action Units', SnackbarStatus.ERROR);
             }
+        } else if (action === 'delete') {
+            setEditExperiment(row);
+            setOpenDeleteExpDialog(true);
         }
     };
 
@@ -122,6 +127,8 @@ const ExperimentsList = ({
                                 <ColumnTitle style={{ width: '10%' }}>Title</ColumnTitle>
                                 <ColumnTitle style={{ width: '22%' }}>Description</ColumnTitle>
                                 <ColumnTitle style={{ width: '6%' }}>Participants</ColumnTitle>
+                                <ColumnTitle style={{ width: '6%' }}>Sessions</ColumnTitle>
+                                <ColumnTitle style={{ width: '6%' }}>Open Sessions</ColumnTitle>
                                 <ColumnTitle style={{ width: '10%' }}>Launch Time</ColumnTitle>
                                 <ColumnTitle style={{ width: '8%' }}>Status</ColumnTitle>
                                 <TableCell style={{ width: '2%' }} />
@@ -130,7 +137,7 @@ const ExperimentsList = ({
                         <TableBody>
                             {isLoadingExperiments ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} align="center">
+                                    <TableCell colSpan={10} align="center">
                                         <CircularProgress />
                                     </TableCell>
                                 </TableRow>
@@ -145,7 +152,7 @@ const ExperimentsList = ({
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} align="center">
+                                    <TableCell colSpan={10} align="center">
                                         <Typography variant="body1">
                                             <b>No experiments found</b>
                                         </Typography>
