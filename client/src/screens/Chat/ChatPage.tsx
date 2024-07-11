@@ -64,16 +64,17 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
                 getExperimentCoversationForms(experimentId),
                 getExperimentFeatures(experimentId),
             ]);
-            console.log(conversationId, conversation)
+            //console.log(conversationId, conversation)
             if (!preConversationFormAnsweredKeyAnswered && conversationForms.preConversation) {
                 setIsSurveyOpen(true);
             }
             setConversationForms(conversationForms);
             setExperimentFeatures(experimentFeaturesRes);
-            if (Array.isArray(conversation)) {
-                setMessages(conversation);
+            //console.log(conversation['conversation'])
+            if (Array.isArray(conversation['conversation'])) {
+                setMessages(conversation['conversation'].length ? conversation['conversation'] : []);
               } else {
-                console.error('Invalid conversation format:', conversation);
+                console.error('Invalid conversation format:', conversation['conversation']);
               }
             setIsPageLoading(false);
             let cameraAccess = false;
@@ -86,10 +87,6 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
         }
     }, []);
 
-    useEffect(() => {
-        console.log('Messages state:', messages);
-      }, [messages]);
-    
     useEffectAsync(async () => {
         let intervalId;
         const captureAndSendFrame = () => {
@@ -122,8 +119,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
             setMessages(
                 messages.map((message) => (message._id === messageId ? { ...message, userAnnotation } : message))
             );
-            console.log("Vaibhav here: ", messages)
-            console.log("Vaibhav again: ", setMessages)
+            //console.log("Vaibhav here: ", messages)
+            //console.log("Vaibhav again: ", setMessages)
         } catch (error) {
             console.log(error);
         }

@@ -35,6 +35,8 @@ class ConversationsService {
         const agent = JSON.parse(JSON.stringify(metadataConversation.agent));
         //const { cameraCaptureRate, ...agentWithoutCameraCaptureRate } = agent;
         delete agent.cameraCaptureRate;
+        //let tempt = await CurrentStateModels.find({ }).exec();
+        //console.log(tempt)
         const current_state = await this.getCurrentState(conversationId)
         const val = current_state[0]["valence"] / current_state[0]["count"]
         const ar = current_state[0]["arousal"] / current_state[0]["count"]
