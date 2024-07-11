@@ -175,7 +175,7 @@ class ConvesationsController {
 
         const conversation = await conversationsService.getConversation(conversationId);
         const conversationMetaData = await conversationsService.getConversationMetadata(conversationId);
-        //console.log(conversationMetaData);
+        //console.log(conversation);
         res.status(200).send({"conversation": conversation, "conversationMetaData": conversationMetaData});
     });
 

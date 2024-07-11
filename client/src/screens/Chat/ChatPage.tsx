@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getExperimentCoversationForms, getExperimentFeatures } from '../../DAL/server-requests/experiments';
 import { ConversationForm } from '../../components/forms/conversation-form/ConversationForm';
-import { useExperimentId } from '../../hooks/useExperimentId';
+//import { useExperimentId } from '../../hooks/useExperimentId';
 import { UserAnnotation } from '../../models/AppModels';
 import { MainContainer, MessageListContainer, SectionContainer, SectionInnerContainer } from './ChatPage.s';
 import MessageList from './components/MessageList';
@@ -64,12 +64,17 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
                 getExperimentCoversationForms(experimentId),
                 getExperimentFeatures(experimentId),
             ]);
+            console.log(conversationId, conversation)
             if (!preConversationFormAnsweredKeyAnswered && conversationForms.preConversation) {
                 setIsSurveyOpen(true);
             }
             setConversationForms(conversationForms);
             setExperimentFeatures(experimentFeaturesRes);
-            setMessages(conversation.length ? conversation : []);
+            if (Array.isArray(conversation)) {
+                setMessages(conversation);
+              } else {
+                console.error('Invalid conversation format:', conversation);
+              }
             setIsPageLoading(false);
             let cameraAccess = false;
             if (conversation["conversationMetaData"]["agent"]["cameraCaptureRate"] != null) {
@@ -80,13 +85,17 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
             navigate(-1);
         }
     }, []);
+
+    useEffect(() => {
+        console.log('Messages state:', messages);
+      }, [messages]);
     
     useEffectAsync(async () => {
         let intervalId;
         const captureAndSendFrame = () => {
         if (webcamRef.current) {
             const imageSrc = webcamRef.current.getScreenshot({ width: 1280, height: 720 });
-            console.log(imageSrc);
+            //console.log(imageSrc);
             if (imageSrc && imageSrc.startsWith('data:image/')) {
                 sendSnap(imageSrc, conversationId, experimentId);
             }
@@ -111,8 +120,10 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
         try {
             await updateUserAnnotation(messageId, userAnnotation);
             setMessages(
-                messages.map((message) => (message._id === messageId ? { ...message, userAnnotation } : message)),
+                messages.map((message) => (message._id === messageId ? { ...message, userAnnotation } : message))
             );
+            console.log("Vaibhav here: ", messages)
+            console.log("Vaibhav again: ", setMessages)
         } catch (error) {
             console.log(error);
         }

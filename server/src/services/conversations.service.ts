@@ -128,9 +128,11 @@ class ConversationsService {
         }
 
         if (user.isAdmin) {
+            //console.log("Vaibhav here too")
             agent = await experimentsService.getActiveAgent(experimentId);
         }
-
+        //console.log("Are you working here?")
+        //console.log("Vaibhav here", agent)
         const res = await MetadataConversationsModel.create({
             conversationNumber: userConversationsNumber + 1,
             experimentId,
@@ -138,11 +140,12 @@ class ConversationsService {
             agent: user.isAdmin ? agent : user.agent,
             maxMessages: user.isAdmin ? undefined : experimentBoundries.maxMessages,
         });
-
+        //console.log("Why aren't you working here?")
         const firstMessage: Message = {
             role: 'assistant',
             content: user.isAdmin ? agent.firstChatSentence : user.agent.firstChatSentence,
         };
+        console.log(firstMessage)
         await Promise.all([
             this.createMessageDoc(firstMessage, res._id.toString(), 1, 0, 0),
             usersService.addConversation(userId),
@@ -164,6 +167,7 @@ class ConversationsService {
 
     getCurrentState = async (conversationId: string) => {
         try {
+            console.log("Are you even here?")
             console.log(conversationId);
             const current_state = await CurrentStateModels.find({ id: conversationId }).exec();
             console.log(current_state);
