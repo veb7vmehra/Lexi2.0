@@ -83,7 +83,9 @@ class ExperimentsService {
     };
 
     async getActiveAgent(experimentId: string): Promise<IAgent> {
+        //console.log("we are here now")
         const experiment = await this.getExperiment(experimentId);
+        //console.log(experiment)
         let agentId;
         if (experiment.agentsMode === AgentsMode.SINGLE) {
             agentId = experiment.activeAgent;

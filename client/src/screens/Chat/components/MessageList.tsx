@@ -2,6 +2,7 @@ import LoadingDots from '@components/loadig-dots/LoadingDots';
 import { Box } from '@mui/material';
 import { MessageType } from '@root/models/AppModels';
 import Message from './Message';
+import { useEffect } from 'react';
 
 interface MessageListProps {
     isMobile: boolean;
@@ -19,7 +20,19 @@ const MessageList: React.FC<MessageListProps> = ({
     size,
     experimentHasUserAnnotation,
     handleUpdateUserAnnotation,
-}) => (
+}) => {
+    useEffect(() => {
+        console.log('MessageList props:', {
+            isMobile,
+            messages,
+            isMessageLoading,
+            size,
+            experimentHasUserAnnotation,
+            handleUpdateUserAnnotation,
+        });
+    }, [isMobile, messages, isMessageLoading, size, experimentHasUserAnnotation, handleUpdateUserAnnotation]);
+
+    return (
     <Box height="100%" width={isMobile ? '100%' : '85%'} padding={2}>
         {messages.map((message, index) => (
             <Message
@@ -34,5 +47,6 @@ const MessageList: React.FC<MessageListProps> = ({
         {isMessageLoading && <LoadingDots />}
     </Box>
 );
+};
 
 export default MessageList;

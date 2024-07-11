@@ -9,7 +9,7 @@ export const currentStateSchema = new Schema<ICurrentState>(
         arousal: { type: Number, required: true },
         count: { type: Number, required: true },
     },
-    { versionKey: false, collection: 'current_state' },
+    { versionKey: false },
 );
 
 export const CurrentStateModels = mongoDbProvider.getModel('current_state', currentStateSchema);
