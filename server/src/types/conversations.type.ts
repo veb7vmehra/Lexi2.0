@@ -17,7 +17,8 @@ export interface IConversation {
 
 export interface IExplainable {
     conversationId: string;
-    input: string;
+    prompt_input: string;
+    user_input: string,
     response: string;
     role: string;
     createdAt: Date;
