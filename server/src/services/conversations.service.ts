@@ -43,7 +43,8 @@ class ConversationsService {
         console.log(current_state[0]["valence"])
         console.log(current_state[0]["arousal"])
         
-
+        const og_text = { ...message };
+        console.log(og_text)
         const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar);
         const chatRequest = this.getChatRequest(agent, messages);
         await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar);
@@ -80,7 +81,7 @@ class ConversationsService {
         });
 
         const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar);
-        const ExchatRequest = this.getChatRequest(agent, messages);
+        const ExchatRequest = this.getChatRequest(agent, Exmessages);
 
         let ExassistantMessage = '';        
 
@@ -96,8 +97,9 @@ class ConversationsService {
                 ExassistantMessage += assistantMessagePart;
             }
         }*/
-
+        console.log("idk why", og_text)
         await this.createExplainableDoc(
+            og_text,
             message,
             {
                 content: ExassistantMessage,
@@ -308,9 +310,10 @@ class ConversationsService {
         return { _id: res._id, role: res.role, content: res.content, userAnnotation: res.userAnnotation };
     };
 
-    private createExplainableDoc = async (message: Message, resp: Message, conversationId: string, messageNumber: number, val:number, ar:number) => {
+    private createExplainableDoc = async (og_text: Message, message: Message, resp: Message, conversationId: string, messageNumber: number, val:number, ar:number) => {
         const res = await ExplainableModel.create({
-            input: message.content,
+            user_input: og_text.content,
+            prompt_input: message.content,
             response: resp.content,
             role: resp.role,
             conversationId,

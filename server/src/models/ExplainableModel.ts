@@ -5,7 +5,8 @@ import { IExplainable } from '../types';
 export const explainableSchema = new Schema<IExplainable>(
     {
         conversationId: { type: String, required: true },
-        input: { type: String, required: true },
+        prompt_input: { type: String, required: true },
+        user_input: { type: String, required: true },
         response: { type: String, required: true },
         role: { type: String, required: true },
         createdAt: { type: Date, default: Date.now },
