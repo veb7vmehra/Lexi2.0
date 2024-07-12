@@ -104,6 +104,8 @@ const messagesSheetCol = [
     { header: 'Role', key: 'role' },
     { header: 'User Annotation', key: 'userAnnotation' },
     { header: 'Content', key: 'content' },
+    { header: 'Valence', key: 'valence' },
+    { header: 'Arousal', key: 'arousal' },
     { header: 'Created At', key: 'createdAt' },
 ];
 
@@ -121,6 +123,7 @@ class DataAggregationService {
             const data = [];
             for (const user of users.data) {
                 const conversations = await conversationsService.getUserConversations(user._id);
+                console.log(conversations[0]["conversation"])
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { agent, ...userWithoutAgent } = user;
                 data.push({
@@ -291,6 +294,8 @@ class DataAggregationService {
                             },
                             conversationNumber: conversation.metadata.conversationNumber,
                             content: message.content,
+                            valence: message.valence,
+                            arousal: message.arousal,
                             role: message.role,
                             createdAt: message.createdAt,
                             messageNumber: message.messageNumber,

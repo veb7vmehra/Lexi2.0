@@ -19,6 +19,17 @@ class DataAggregationController {
         await workbook.xlsx.write(res);
         res.end();
     });
+
+    getExpAIData = requestHandler(async (req, res) => {
+        const experimentId = req.query.experimentId as string;
+        const workbook = await dataAggregationService.createExperimentDataExcel(experimentId);
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename=ExpAIData.xlsx');
+
+        await workbook.xlsx.write(res);
+        res.end();
+    });
 }
 
 export const dataAggregationController = new DataAggregationController();
