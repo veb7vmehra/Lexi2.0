@@ -5,7 +5,5 @@ export const dataAggregationRouter = () => {
     const router = Router();
     router.get('/', dataAggregationController.getExperimentData);
     router.get('/excel', dataAggregationController.getExperimentExcel);
-    router.get('/expAI', dataAggregationController.getExpAIData);
-
     return router;
 };

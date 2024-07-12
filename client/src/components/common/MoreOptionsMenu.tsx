@@ -73,17 +73,6 @@ export const MoreOptionsMenu = ({
         <MenuItem
             onClick={() => {
                 onMenuClose();
-                handleMenuAction('downloadExp');
-            }}
-        >
-            <ListItemIcon>
-                <DownloadIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Download Explainable AI Data</ListItemText>
-        </MenuItem>
-        <MenuItem
-            onClick={() => {
-                onMenuClose();
                 handleMenuAction('delete');
             }}
         >
