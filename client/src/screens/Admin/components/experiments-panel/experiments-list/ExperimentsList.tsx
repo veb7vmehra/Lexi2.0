@@ -1,4 +1,4 @@
-import { downloadExperimentJSON, downloadExperimentXLSX, downloadFolderAsZip } from '@DAL/server-requests/dataAggregation';
+import { downloadExperimentJSON, downloadExperimentXLSX, downloadFolderAsZip, downloadExpAI } from '@DAL/server-requests/dataAggregation';
 import AsyncButton from '@components/common/AsyncButton';
 import { SnackbarStatus, useSnackbar } from '@contexts/SnackbarProvider';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
@@ -72,6 +72,14 @@ const ExperimentsList = ({
                 openSnackbar('Download AU Success !', SnackbarStatus.SUCCESS);
             } catch (err) {
                 openSnackbar('Failed to Download Action Units', SnackbarStatus.ERROR);
+            }
+        } else if (action == 'downloadExp') {
+            try {
+                openSnackbar('Downloading ExplainableAI data...', SnackbarStatus.INFO);
+                await downloadExpAI(row._id, row.title);
+                openSnackbar('Explainable AI data downloaded!', SnackbarStatus.SUCCESS);
+            } catch (err) {
+                openSnackbar('Failed to Download ExplainableAI data.', SnackbarStatus.ERROR);
             }
         } else if (action === 'delete') {
             setEditExperiment(row);
