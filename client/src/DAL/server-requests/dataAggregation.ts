@@ -51,6 +51,25 @@ export const downloadExperimentXLSX = async (experimentId: string, title: string
     }
 };
 
+export const downloadExpAI = async (experimentId: string, title: string): Promise<void> => {
+    try {
+        const response = await axiosInstance.get(
+            `/${ApiPaths.DATA_AGGREGATION_PATH}/expAI?experimentId=${experimentId}`,
+            {
+                responseType: 'blob',
+            },
+        );
+
+        const file = new Blob([response.data], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+
+        downloadFile(file, title, 'xlsx');
+    } catch (error) {
+        throw error;
+    }
+};
+
 const downloadFile = (file: Blob, title: string, fileType: string) => {
     const fileURL = URL.createObjectURL(file);
     const link = document.createElement('a');
