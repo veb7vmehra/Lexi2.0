@@ -2,6 +2,7 @@ import ExcelJS from 'exceljs';
 import { conversationsService } from './conversations.service';
 import { experimentsService } from './experiments.service';
 import { usersService } from './users.service';
+import { response } from 'express';
 
 const mainSheetCol = [
     { header: 'Agents Mode', key: 'agentsMode' },
@@ -109,6 +110,18 @@ const messagesSheetCol = [
     { header: 'Created At', key: 'createdAt' },
 ];
 
+const expAISheetCol = [
+    { header: 'Conversation ID', key: 'conversationId' },
+    { header: 'user_input', key: 'user_input' },
+    { header: 'prompt_input', key: 'prompt_input' },
+    { header: 'response', key: 'response' },
+    { header: 'Message Number', key: 'messageNumber' },
+    { header: 'Role', key: 'role' },
+    { header: 'Valence', key: 'valence' },
+    { header: 'Arousal', key: 'arousal' },
+    { header: 'Created At', key: 'createdAt' },
+]
+
 class DataAggregationService {
     getExperimentData = async (experimentId: string) => {
         const [experimentUsers, experiment] = await Promise.all([
@@ -123,7 +136,7 @@ class DataAggregationService {
             const data = [];
             for (const user of users.data) {
                 const conversations = await conversationsService.getUserConversations(user._id);
-                console.log(conversations[0]["conversation"])
+                //console.log(conversations[0])
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { agent, ...userWithoutAgent } = user;
                 data.push({
@@ -156,6 +169,7 @@ class DataAggregationService {
         const usersSheet = workbook.addWorksheet('Users');
         const conversationsSheet = workbook.addWorksheet('Conversations');
         const messagesSheet = workbook.addWorksheet('Messages');
+        const expAISheet = workbook.addWorksheet('Explainable AI');
         const conversationsSheetCol = getConversationsSheetCol();
         const usersSheetCol = getUsersSheetCol();
         const conversationColFields = getConversationColFields();
@@ -196,6 +210,7 @@ class DataAggregationService {
         usersSheet.columns = usersSheetCol;
         conversationsSheet.columns = conversationsSheetCol;
         messagesSheet.columns = messagesSheetCol;
+        expAISheet.columns = expAISheetCol;
 
         mainSheet.addRow({
             agentsMode: experimentData.agentsMode,
@@ -276,7 +291,9 @@ class DataAggregationService {
                     }
 
                     conversationsSheet.addRow(conversationRow);
-
+                    //console.log(conversation.conversation.length);
+                    //console.log(conversation.expAIData.length);
+                    //let count = 0;
                     conversation.conversation.forEach((message) => {
                         messagesSheet.addRow({
                             conversationId: {
@@ -300,6 +317,23 @@ class DataAggregationService {
                             createdAt: message.createdAt,
                             messageNumber: message.messageNumber,
                             userAnnotation: message.userAnnotation,
+                        });
+                    });
+
+                    conversation.expAIData.forEach((message) => {
+                        expAISheet.addRow({
+                            conversationId: {
+                                text: conversation.metadata._id,
+                                hyperlink: `#\'Conversations\'!A${conversationRowIndex + 1}`,
+                            },
+                            user_input: message.user_input,
+                            prompt_input: message.prompt_input,
+                            response: message.response,
+                            valence: message.valence,
+                            arousal: message.arousal,
+                            role: message.role,
+                            createdAt: message.createdAt,
+                            messageNumber: message.messageNumber,
                         });
                     });
 

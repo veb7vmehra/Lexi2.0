@@ -202,9 +202,13 @@ class ConversationsService {
             const conversation = await ConversationsModel.find({
                 conversationId: metadataConversation._id,
             }).lean();
+            const expAI = await ExplainableModel.find({
+                conversationId: metadataConversation._id,
+            }).lean()
             conversations.push({
                 metadata: metadataConversation,
                 conversation,
+                expAIData: expAI,
             });
         }
 
