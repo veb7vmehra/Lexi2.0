@@ -202,7 +202,7 @@ class ConversationsService {
         return res;
     };
 
-    getUserConversations = async (userId: string): Promise<any> => {
+    getUserConversations = async (userId: string, ccr): Promise<any> => {
         const conversations = [];
         const metadataConversations = await MetadataConversationsModel.find({ userId }, { agent: 0 }).lean();
 
@@ -210,9 +210,13 @@ class ConversationsService {
             const conversation = await ConversationsModel.find({
                 conversationId: metadataConversation._id,
             }).lean();
-            const expAI = await ExplainableModel.find({
-                conversationId: metadataConversation._id,
-            }).lean()
+            let expAI = {}
+            console.log(ccr)
+            if (ccr != null) {
+                expAI = await ExplainableModel.find({
+                    conversationId: metadataConversation._id,
+                }).lean()
+            }
             conversations.push({
                 metadata: metadataConversation,
                 conversation,

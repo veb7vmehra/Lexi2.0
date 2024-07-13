@@ -135,10 +135,11 @@ class DataAggregationService {
             totalUsers += users.data.length;
             const data = [];
             for (const user of users.data) {
-                const conversations = await conversationsService.getUserConversations(user._id);
+                const { agent, ...userWithoutAgent } = user;
+                //console.log(agent)
+                const conversations = await conversationsService.getUserConversations(user._id, agent.cameraCaptureRate);
                 //console.log(conversations[0])
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const { agent, ...userWithoutAgent } = user;
                 data.push({
                     numberOfConversations: user.numberOfConversations,
                     user: userWithoutAgent,
@@ -319,23 +320,25 @@ class DataAggregationService {
                             userAnnotation: message.userAnnotation,
                         });
                     });
-
-                    conversation.expAIData.forEach((message) => {
-                        expAISheet.addRow({
-                            conversationId: {
-                                text: conversation.metadata._id,
-                                hyperlink: `#\'Conversations\'!A${conversationRowIndex + 1}`,
-                            },
-                            user_input: message.user_input,
-                            prompt_input: message.prompt_input,
-                            response: message.response,
-                            valence: message.valence,
-                            arousal: message.arousal,
-                            role: message.role,
-                            createdAt: message.createdAt,
-                            messageNumber: message.messageNumber,
+                    console.log(agent.condition.cameraCaptureRate)
+                    if ( agent.condition.cameraCaptureRate != null ) {
+                        conversation.expAIData.forEach((message) => {
+                            expAISheet.addRow({
+                                conversationId: {
+                                    text: conversation.metadata._id,
+                                    hyperlink: `#\'Conversations\'!A${conversationRowIndex + 1}`,
+                                },
+                                user_input: message.user_input,
+                                prompt_input: message.prompt_input,
+                                response: message.response,
+                                valence: message.valence,
+                                arousal: message.arousal,
+                                role: message.role,
+                                createdAt: message.createdAt,
+                                messageNumber: message.messageNumber,
+                            });
                         });
-                    });
+                    }
 
                     conversationRowIndex++;
                 });
