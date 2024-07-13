@@ -34,18 +34,24 @@ class ConversationsService {
 
         const agent = JSON.parse(JSON.stringify(metadataConversation.agent));
         //const { cameraCaptureRate, ...agentWithoutCameraCaptureRate } = agent;
+        const ccr = { ...agent.cameraCaptureRate }
         delete agent.cameraCaptureRate;
         //let tempt = await CurrentStateModels.find({ }).exec();
         //console.log(tempt)
-        const current_state = await this.getCurrentState(conversationId)
-        const val = current_state[0]["valence"] / current_state[0]["count"]
-        const ar = current_state[0]["arousal"] / current_state[0]["count"]
-        console.log(current_state[0]["valence"])
-        console.log(current_state[0]["arousal"])
+        let val = 0;
+        let ar = 0
+        console.log("ccr", ccr)
+        if ( JSON.stringify(ccr) != '{}' ) {
+            const current_state = await this.getCurrentState(conversationId)
+            val = current_state[0]["valence"] / current_state[0]["count"]
+            ar = current_state[0]["arousal"] / current_state[0]["count"]
+        }
+        //console.log(current_state[0]["valence"])
+        //console.log(current_state[0]["arousal"])
         
         const og_text = { ...message };
-        console.log(og_text)
-        const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar);
+        //console.log(og_text)
+        const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr);
         const chatRequest = this.getChatRequest(agent, messages);
         await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar);
 
@@ -80,36 +86,38 @@ class ConversationsService {
             $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
         });
 
-        const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar);
-        const ExchatRequest = this.getChatRequest(agent, Exmessages);
+        if ( JSON.stringify(ccr) != '{}' ) {
+            const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar);
+            const ExchatRequest = this.getChatRequest(agent, Exmessages);
 
-        let ExassistantMessage = '';        
+            let ExassistantMessage = '';        
 
-        if (true) {
-            const response = await openai.chat.completions.create(ExchatRequest);
-            ExassistantMessage = response.choices[0].message.content?.trim();
-        } 
-        /*else {
-            const responseStream = await openai.chat.completions.create({ ...ExchatRequest, stream: true });
-            for await (const partialResponse of responseStream) {
-                const assistantMessagePart = partialResponse.choices[0]?.delta?.content || '';
-                await streamResponse(assistantMessagePart);
-                ExassistantMessage += assistantMessagePart;
-            }
-        }*/
-        console.log("idk why", og_text)
-        await this.createExplainableDoc(
-            og_text,
-            message,
-            {
-                content: ExassistantMessage,
-                role: 'assistant',
-            },
-            conversationId,
-            conversation.length + 2,
-            val,
-            ar,
-        );
+            if (true) {
+                const response = await openai.chat.completions.create(ExchatRequest);
+                ExassistantMessage = response.choices[0].message.content?.trim();
+            } 
+            /*else {
+                const responseStream = await openai.chat.completions.create({ ...ExchatRequest, stream: true });
+                for await (const partialResponse of responseStream) {
+                    const assistantMessagePart = partialResponse.choices[0]?.delta?.content || '';
+                    await streamResponse(assistantMessagePart);
+                    ExassistantMessage += assistantMessagePart;
+                }
+            }*/
+            console.log("idk why", og_text)
+            await this.createExplainableDoc(
+                og_text,
+                message,
+                {
+                    content: ExassistantMessage,
+                    role: 'assistant',
+                },
+                conversationId,
+                conversation.length + 2,
+                val,
+                ar,
+            );
+        }
 
         return savedMessage;
     };
@@ -256,12 +264,14 @@ class ConversationsService {
         }
     };
 
-    private getConversationMessages = (agent: IAgent, conversation: Message[], message: Message, val: number, ar: number) => {
+    private getConversationMessages = (agent: IAgent, conversation: Message[], message: Message, val: number, ar: number, ccr) => {
         const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
         const beforeUserMessage = { role: 'system', content: agent.beforeUserSentencePrompt };
         const afterUserMessage = { role: 'system', content: agent.afterUserSentencePrompt };
-        const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + "while user replies to you " + message["content"]
-        message["content"] = final_message
+        if ( JSON.stringify(ccr) != '{}' ) {
+            const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + "while user replies to you " + message["content"]
+            message["content"] = final_message
+        }
         console.log(message)
         const messages = [
             systemPrompt,
