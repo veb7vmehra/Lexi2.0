@@ -71,7 +71,7 @@ const ExperimentsList = ({
                 await downloadFolderAsZip(row._id);
                 openSnackbar('Download AU Success !', SnackbarStatus.SUCCESS);
             } catch (err) {
-                openSnackbar('Failed to Download Action Units', SnackbarStatus.ERROR);
+                openSnackbar('Action Units unavailable for this experiment.', SnackbarStatus.ERROR);
             }
         } else if (action === 'delete') {
             setEditExperiment(row);
