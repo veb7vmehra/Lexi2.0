@@ -164,6 +164,28 @@ const AgentForm: React.FC<AgentFormProps> = ({
         }
     };
     
+    const renderCheckbox = (
+        field: string,
+        name: string,
+        enabled: boolean,
+    ) => (
+        <FormControl fullWidth margin="normal">
+            <Typography gutterBottom>{field.charAt(0).toUpperCase() + field.slice(1)}</Typography>
+            <Box display="flex" alignItems="center" gap={1}>
+                <Checkbox
+                    checked={enabled}
+                    onChange={(e) => {
+                        handleSliderChange(e.target.checked ? defaultSliderSettings[field] : null, field);
+                        setSlidersEnabled({
+                            ...slidersEnabled,
+                            [`${field}Enabled`]: e.target.checked,
+                        });
+                    }}
+                    name={`${field}Enabled`}
+                />
+            </Box>
+        </FormControl>
+    );
 
     const renderSlider = (
         field: string,
@@ -307,14 +329,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 0.01,
                 slidersEnabled.presencePenaltyEnabled,
             )}
-            {renderSlider(
-                'cameraCaptureRate',
-                'cameraCaptureRate',
-                5,
-                50,
-                1,
-                slidersEnabled.cameraCaptureRateEnabled,
-            )}
+            {renderCheckbox('cameraCaptureRate', 'cameraCaptureRate', slidersEnabled.cameraCaptureRateEnabled)}
             {slidersEnabled.cameraCaptureRateEnabled && (
                 <Box display="flex" justifyContent="space-between" margin="normal">
                     <Button variant="outlined" onClick={downloadSample}>
