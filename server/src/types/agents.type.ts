@@ -15,6 +15,7 @@ export interface IAgent {
     frequencyPenalty: number;
     presencePenalty: number;
     cameraCaptureRate: number;
+    vaIntegration: number;
     stopSequences: string[];
     createdAt: Date;
     timestamp: number;

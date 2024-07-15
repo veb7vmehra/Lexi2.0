@@ -7,6 +7,7 @@ export const defaultSliderSettings = {
     frequencyPenalty: 0,
     presencePenalty: 0,
     cameraCaptureRate: 5,
+    vaIntegration: 1,
 } as const;
 
 export const agentsOptions = ['gpt-3.5-turbo', 'gpt-4-1106-preview'] as const;
@@ -26,6 +27,7 @@ export const defaultSettings: AgentType = {
     frequencyPenalty: null,
     presencePenalty: null,
     cameraCaptureRate: null,
+    vaIntegration: null,
     stopSequences: [],
 };
 
@@ -69,6 +71,7 @@ export const initialSlidersEnabled = {
     frequencyPenaltyEnabled: false,
     presencePenaltyEnabled: false,
     cameraCaptureRateEnabled: false,
+    vaIntegrationEnabled: false,
 } as const;
 
 export const ApiPaths = {
