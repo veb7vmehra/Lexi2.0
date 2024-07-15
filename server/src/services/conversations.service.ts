@@ -34,14 +34,19 @@ class ConversationsService {
 
         const agent = JSON.parse(JSON.stringify(metadataConversation.agent));
         //const { cameraCaptureRate, ...agentWithoutCameraCaptureRate } = agent;
-        const ccr = { ...agent.cameraCaptureRate }
+        //console.log(agent)
+        const ccr = agent.cameraCaptureRate
+        const vai = agent.vaIntegration
+        //console.log("vai", vai)
+        //console.log("ccr", ccr)
         delete agent.cameraCaptureRate;
+        delete agent.vaIntegration;
         //let tempt = await CurrentStateModels.find({ }).exec();
         //console.log(tempt)
         let val = 0;
         let ar = 0
-        console.log("ccr", ccr)
-        if ( JSON.stringify(ccr) != '{}' ) {
+        
+        if ( ccr != null && vai != null ) {
             const current_state = await this.getCurrentState(conversationId)
             val = current_state[0]["valence"] / current_state[0]["count"]
             ar = current_state[0]["arousal"] / current_state[0]["count"]
@@ -51,7 +56,7 @@ class ConversationsService {
         
         const og_text = { ...message };
         //console.log(og_text)
-        const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr);
+        const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr, vai);
         const chatRequest = this.getChatRequest(agent, messages);
         await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar);
 
@@ -86,7 +91,7 @@ class ConversationsService {
             $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
         });
 
-        if ( JSON.stringify(ccr) != '{}' ) {
+        if ( ccr != null && vai != null ) {
             const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar);
             const ExchatRequest = this.getChatRequest(agent, Exmessages);
 
@@ -202,7 +207,7 @@ class ConversationsService {
         return res;
     };
 
-    getUserConversations = async (userId: string, ccr): Promise<any> => {
+    getUserConversations = async (userId: string, ccr, vai): Promise<any> => {
         const conversations = [];
         const metadataConversations = await MetadataConversationsModel.find({ userId }, { agent: 0 }).lean();
 
@@ -212,7 +217,7 @@ class ConversationsService {
             }).lean();
             let expAI = {}
             console.log(ccr)
-            if (ccr != null) {
+            if (ccr != null && vai != null) {
                 expAI = await ExplainableModel.find({
                     conversationId: metadataConversation._id,
                 }).lean()
@@ -268,11 +273,11 @@ class ConversationsService {
         }
     };
 
-    private getConversationMessages = (agent: IAgent, conversation: Message[], message: Message, val: number, ar: number, ccr) => {
+    private getConversationMessages = (agent: IAgent, conversation: Message[], message: Message, val: number, ar: number, ccr, vai) => {
         const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
         const beforeUserMessage = { role: 'system', content: agent.beforeUserSentencePrompt };
         const afterUserMessage = { role: 'system', content: agent.afterUserSentencePrompt };
-        if ( JSON.stringify(ccr) != '{}' ) {
+        if ( ccr != null && vai != null ) {
             const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + "while user replies to you " + message["content"]
             message["content"] = final_message
         }
@@ -355,6 +360,7 @@ class ConversationsService {
         if (agent.temperature) chatCompletionsReq['temperature'] = agent.temperature;
         if (agent.presencePenalty) chatCompletionsReq['presence_penalty'] = agent.presencePenalty;
         if (agent.cameraCaptureRate) chatCompletionsReq['cameraCaptureRate'] = agent.cameraCaptureRate;
+        if (agent.vaIntegration) chatCompletionsReq['vaIntegration'] = agent.vaIntegration;
         if (agent.stopSequences) chatCompletionsReq['stop'] = agent.stopSequences;
 
         return chatCompletionsReq;

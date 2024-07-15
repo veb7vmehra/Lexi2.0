@@ -54,6 +54,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                   frequencyPenaltyEnabled: editAgent.frequencyPenalty !== null,
                   presencePenaltyEnabled: editAgent.presencePenalty !== null,
                   cameraCaptureRate: editAgent.cameraCaptureRate !== null,
+                  vaIntegration: editAgent.vaIntegration !== null,
               }
             : initialSlidersEnabled,
     );
@@ -346,6 +347,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                     </Button>
                 </Box>
             )}
+            {renderCheckbox('vaIntegration', 'vaIntegration', slidersEnabled.vaIntegrationEnabled)}
             <ChipsInput
                 list={agent.stopSequences}
                 setList={(stops) => setAgent({ ...agent, stopSequences: stops })}

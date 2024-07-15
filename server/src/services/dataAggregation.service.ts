@@ -24,6 +24,7 @@ const agentsSheetCol = [
     { header: 'Frequency Penalty', key: 'frequencyPenalty' },
     { header: 'Presence Penalty', key: 'presencePenalty' },
     { header: 'Camera Capture Rate', key: 'cameraCaptureRate'},
+    { header: 'Valence-Arousal Integration', key: 'vaIntegration'},
     { header: 'Stop Sequences', key: 'stopSequences' },
 ];
 
@@ -137,7 +138,7 @@ class DataAggregationService {
             for (const user of users.data) {
                 const { agent, ...userWithoutAgent } = user;
                 //console.log(agent)
-                const conversations = await conversationsService.getUserConversations(user._id, agent.cameraCaptureRate);
+                const conversations = await conversationsService.getUserConversations(user._id, agent.cameraCaptureRate, agent.vaIntegration);
                 //console.log(conversations[0])
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 data.push({
@@ -238,6 +239,7 @@ class DataAggregationService {
                 frequencyPenalty: agent.condition.frequencyPenalty,
                 presencePenalty: agent.condition.presencePenalty,
                 cameraCaptureRate: agent.condition.cameraCaptureRate,
+                vaIntegration: agent.condition.vaIntegration,
                 stopSequences: agent.condition.stopSequences,
             });
 
@@ -321,7 +323,7 @@ class DataAggregationService {
                         });
                     });
                     console.log(agent.condition.cameraCaptureRate)
-                    if ( agent.condition.cameraCaptureRate != null ) {
+                    if ( agent.condition.cameraCaptureRate != null && agent.condition.vaIntegration != null ) {
                         conversation.expAIData.forEach((message) => {
                             expAISheet.addRow({
                                 conversationId: {
