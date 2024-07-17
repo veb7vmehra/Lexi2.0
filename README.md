@@ -89,10 +89,7 @@ The current [openFace](https://github.com/TadasBaltrusaitis/OpenFace) version do
 - [Installation steps for MacOS](https://github.com/TadasBaltrusaitis/OpenFace/wiki/Mac-installation)
 - Make sure to install openFace inside the Lexi2.0 folder and rename the openface folder to "openFace".
 
-If you haven't until now, irrespective of your OS, run the download_models.ps1 (for Windows) or download_models.sh (for Unix and MacOS), you can find these scripts inside the openFace folder. After which create the following folders:
-
-- An empty folder inside server folder titled "webcamBase"
-- An empty folder inside server folder titled "action-units"
+If you haven't until now, irrespective of your OS, run the download_models.ps1 (for Windows) or download_models.sh (for Unix and MacOS), you can find these scripts inside the openFace folder.
 
 ### Step 5: Install pip requirements
 
