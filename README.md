@@ -88,6 +88,7 @@ The current [openFace](https://github.com/TadasBaltrusaitis/OpenFace) version do
 - [Installastion steps for Unix](https://github.com/TadasBaltrusaitis/OpenFace/wiki/Unix-Installation)
 - [Installation steps for MacOS](https://github.com/TadasBaltrusaitis/OpenFace/wiki/Mac-installation)
 - Make sure to install openFace inside the Lexi2.0 folder and rename the openface folder to "openFace".
+- I would recommend going through the Dev Branch if you want to use the docker image of the openFace.
 
 If you haven't until now, irrespective of your OS, run the download_models.ps1 (for Windows) or download_models.sh (for Unix and MacOS), you can find these scripts inside the openFace folder.
 
