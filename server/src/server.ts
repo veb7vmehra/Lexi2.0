@@ -41,13 +41,17 @@ const setupServer = () => {
     app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
     const corsOptions = {
-        origin: process.env.FRONTEND_URL,
+        origin: 'https://version2.lexi.network',
         credentials: true,
     };
     app.use(cors(corsOptions));
     app.use(cookieParser());
 
     const PORT = process.env.PORT || 5000;
+    app.get('/', (req, res) => {
+    res.send('Hello, World!');
+    });
+
     app.use('/health', (req, res) => res.status(200).send('OK'));
     app.use('/conversations', conversationsRouter());
     app.use('/experiments', experimentsRouter());

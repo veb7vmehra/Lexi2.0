@@ -101,7 +101,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
             }*/
                 }        }
         if (cameraAccess) {
-            intervalId = setInterval(captureAndSendFrame, 10000); // Capture and send a frame every second
+            intervalId = setInterval(captureAndSendFrame, 1000); // Capture and send a frame every second
         }
     
         return () => clearInterval(intervalId);

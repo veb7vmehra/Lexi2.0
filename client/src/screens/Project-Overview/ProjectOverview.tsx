@@ -32,9 +32,9 @@ const ProjectOverview: React.FC = () => {
                     fontWeight={400}
                     sx={{ maxWidth: '600px', textAlign: 'center', marginBottom: 4 }}
                 >
-                    Lexi is an innovative platform designed in collaboration with Cambridge University. It serves
+                    Lexi is an innovative platform designed by AFAR Lab, University of Cambridge. It serves
                     as a state-of-the-art environment for conducting extensive research and experiments in the
-                    field of user interaction with bots and Language Learning & Agenting Systems (LLMS).
+                    field of user interaction with bots and Language Learning & Agenting Systems (LLMS). Further it is one of a kind platform to conduct experiments collecting multimodal data while using an LLM agent.
                 </StyledTypography>
                 <StyledPaper>
                     <Button variant="contained" sx={{ marginRight: 2 }} onClick={handleGitHubRedirect}>

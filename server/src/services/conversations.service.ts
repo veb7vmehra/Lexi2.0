@@ -50,6 +50,7 @@ class ConversationsService {
             const current_state = await this.getCurrentState(conversationId)
             val = current_state[0]["valence"] / current_state[0]["count"]
             ar = current_state[0]["arousal"] / current_state[0]["count"]
+            await this.updateCurrentState(conversationId, 0, 0, 0);
         }
         //console.log(current_state[0]["valence"])
         //console.log(current_state[0]["arousal"])
@@ -58,7 +59,7 @@ class ConversationsService {
         //console.log(og_text)
         const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr, vai);
         const chatRequest = this.getChatRequest(agent, messages);
-        await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar);
+        await this.createMessageDoc(og_text, conversationId, conversation.length + 1, val, ar);
 
         let assistantMessage = '';
         let streamExplainable = streamResponse;
@@ -195,6 +196,33 @@ class ConversationsService {
         }
     };
 
+    updateCurrentState = async (conversationId: string, valence: number, arousal: number, count: number) => {
+        try {
+            console.log(conversationId);
+            
+            // Find the current state document
+            const current_state = await CurrentStateModels.findOne({ id: conversationId }).exec();
+            
+            if (!current_state) {
+                console.log('Current state not found');
+                return null;
+            }
+    
+            // Update the values
+            current_state.valence = valence;
+            current_state.arousal = arousal;
+            current_state.count = count;
+    
+            // Save the updated document
+            const updated_state = await current_state.save();
+            console.log(updated_state);
+            return updated_state;
+        } catch (err) {
+            console.error(err);
+            return null;
+        }
+    };
+
     updateConversationSurveysData = async (conversationId: string, data, isPreConversation: boolean) => {
         const saveField = isPreConversation ? { preConversation: data } : { postConversation: data };
         const res = await this.updateConversationMetadata(conversationId, saveField);
@@ -278,7 +306,7 @@ class ConversationsService {
         const beforeUserMessage = { role: 'system', content: agent.beforeUserSentencePrompt };
         const afterUserMessage = { role: 'system', content: agent.afterUserSentencePrompt };
         if ( ccr != null && vai != null ) {
-            const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + "while user replies to you " + message["content"]
+            const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + " while user replies to you " + message["content"] + " (Do not share the Valence Arousal values with user.)"
             message["content"] = final_message
         }
         console.log(message)
@@ -352,6 +380,7 @@ class ConversationsService {
         const chatCompletionsReq = {
             messages,
             model: agent.model,
+            //"gpt-4o"
         };
 
         if (agent.maxTokens) chatCompletionsReq['max_tokens'] = agent.maxTokens;

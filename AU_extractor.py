@@ -12,6 +12,9 @@ import numpy
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import dns
+import docker
+import tarfile
+import io
 
 env_path = './server/.env'
 
@@ -34,9 +37,13 @@ faceSize = (64,64) # Input size for both models: categorical and dimensional
 # Path to the parent folder
 parent_folder = "./server/webcamBase"
 # Path to OpenFace FeatureExtraction executable
-openface_exe = "./openFace/FaceLandmarkImg.exe"
+#openface_exe = "./openFace/FaceLandmarkImg.exe"
 # Path to the directory where CSV files will be saved
 csv_output_dir = "./server/action_units"
+
+# Docker client setup
+client = docker.from_env()
+container = client.containers.run('algebr/openface:latest', detach=True, tty=True)
 
 def chmod_fix(path):
     os.chmod(path, stat.S_IRWXU| stat.S_IRWXG| stat.S_IRWXO) # 0777
@@ -105,7 +112,7 @@ def process_child_folder(child_folder):
 
     while True:
         current_time = time.time()
-        if current_time - last_image_time > 20:
+        if current_time - last_image_time > 50:
             #print("we are here now")
             # No new images for more than 5 seconds, delete the folder and exit
             for file in os.listdir(child_folder):
@@ -132,9 +139,59 @@ def process_image(image_path, output_csv, current_time, mongo_key):
     output_dir = os.path.join(os.path.dirname(image_path), "temp_output")
     os.makedirs(output_dir, exist_ok=True)
 
+    # Create a tar archive of the image
+    tar_stream = io.BytesIO()
+    with tarfile.open(fileobj=tar_stream, mode='w') as tar:
+        tar.add(image_path, arcname=os.path.basename(image_path))
+    tar_stream.seek(0)
+
+    # Copy image to Docker container
+    try:
+        container.put_archive('/home/openface-build/build/bin/', tar_stream)
+    except docker.errors.NotFound as e:
+        print(f"Error: {e}")
+        # List directories in the root to find the correct path
+        bits, stat = container.get_archive('/')
+        with tarfile.open(fileobj=io.BytesIO(bits.read())) as tar:
+            for member in tar.getmembers():
+                print(member.name)
+        return
+    except docker.errors.APIError as e:
+        print(f"API Error: {e}")
+        return
+
+    image_filename = os.path.basename(image_path)
+    exit_code, output = container.exec_run(f"ls /home/openface-build/build/bin/")
+    print(f"Files in container directory before processing: {output.decode('utf-8')}")
+    if image_filename not in output.decode('utf-8'):
+        print(f"Error: {image_filename} not found in container directory.")
+        return
+
+
     # Run OpenFace FeatureExtraction tool
-    subprocess.run([openface_exe, "-f", image_path, "-out_dir", output_dir])
+    #subprocess.run([openface_exe, "-f", image_path, "-out_dir", output_dir])
+    command = f"./FaceLandmarkImg -f {image_filename} -out_dir temp_output"
+    print(f"Running command: {command}")
+    exit_code, output = container.exec_run(command, workdir='/home/openface-build/build/bin')
+    print(f"Command output: {output.decode('utf-8')}")
+    if exit_code != 0:
+        print(f"Error: FeatureExtraction command failed with exit code {exit_code}")
+        return
     print("working 1")
+
+    # Copy resulting CSV file back from Docker container
+    csv_name = os.path.basename(image_path).replace(".jpg", ".csv").replace(".png", ".csv")
+    temp_output_path = f"/home/openface-build/build/bin/temp_output/{csv_name}"
+    bits, stat = container.get_archive(temp_output_path)
+    if not bits:
+        print(f"Error: Could not find the file {temp_output_path} in container")
+        return
+
+
+    with open(os.path.join(output_dir, csv_name), 'wb') as file:
+        for chunk in bits:
+            file.write(chunk)
+
     frame = cv2.imread(image_path)
     # detect faces
     facePoints, face = imageProcessing.detectFace(frame)
@@ -174,6 +231,9 @@ def process_image(image_path, output_csv, current_time, mongo_key):
         #os.remove(os.path.join(output_dir, file))
         shutil.rmtree(os.path.join(output_dir, file), ignore_errors=False, onerror=handleRemoveReadonly)
     """
+    container.exec_run(f"rm -rf /home/openface-build/build/bin/temp_output")
+    container.exec_run(f"rm /home/openface-build/build/bin/{os.path.basename(image_path)}")
+
     shutil.rmtree(output_dir, ignore_errors=False, onerror=handleRemoveReadonly)
 
 if __name__ == "__main__":
