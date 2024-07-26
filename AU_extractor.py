@@ -15,6 +15,7 @@ import dns
 import docker
 import tarfile
 import io
+import tracemalloc
 
 env_path = './server/.env'
 
@@ -41,9 +42,13 @@ parent_folder = "./server/webcamBase"
 # Path to the directory where CSV files will be saved
 csv_output_dir = "./server/action_units"
 
+temp_output_dir = "/home/openface-build/build/bin/temp_output"
+
 # Docker client setup
 client = docker.from_env()
-container = client.containers.run('algebr/openface:latest', detach=True, tty=True)
+volume = {os.path.abspath(parent_folder): {'bind': '/data', 'mode': 'rw'}}
+
+container = client.containers.run('algebr/openface:latest', detach=True, tty=True, volumes=volume)
 
 def chmod_fix(path):
     os.chmod(path, stat.S_IRWXU| stat.S_IRWXG| stat.S_IRWXO) # 0777
@@ -128,7 +133,9 @@ def process_child_folder(child_folder):
         for file in os.listdir(child_folder):
             file_path = os.path.join(child_folder, file)
             if os.path.isfile(file_path) and (file.endswith(".jpg") or file.endswith(".png")):
+                st = time.time()
                 process_image(file_path, output_csv, current_time, mongo_key)
+                print("--- %s seconds ---" % (time.time() - st))
                 chmod_fix(file_path)
                 os.remove(file_path)
                 last_image_time = current_time
@@ -139,6 +146,7 @@ def process_image(image_path, output_csv, current_time, mongo_key):
     output_dir = os.path.join(os.path.dirname(image_path), "temp_output")
     os.makedirs(output_dir, exist_ok=True)
 
+    """
     # Create a tar archive of the image
     tar_stream = io.BytesIO()
     with tarfile.open(fileobj=tar_stream, mode='w') as tar:
@@ -177,33 +185,49 @@ def process_image(image_path, output_csv, current_time, mongo_key):
     if exit_code != 0:
         print(f"Error: FeatureExtraction command failed with exit code {exit_code}")
         return
-    print("working 1")
+    """
 
-    # Copy resulting CSV file back from Docker container
-    csv_name = os.path.basename(image_path).replace(".jpg", ".csv").replace(".png", ".csv")
-    temp_output_path = f"/home/openface-build/build/bin/temp_output/{csv_name}"
-    bits, stat = container.get_archive(temp_output_path)
-    if not bits:
-        print(f"Error: Could not find the file {temp_output_path} in container")
+    image_filename = os.path.basename(image_path)
+    print(image_path)
+    container_image_path = image_path.replace(parent_folder, '/data')
+    face_landmark_executable = "/home/openface-build/build/bin/FaceLandmarkImg"
+    print("IMAGE PATH", container_image_path)
+
+    command = f"{face_landmark_executable} -f {container_image_path} -out_dir {temp_output_dir}"
+    print(f"Running command: {command}")
+    exit_code, output = container.exec_run(command)
+    print(f"Command output: {output.decode('utf-8')}")
+    if exit_code != 0:
+        print(f"Error: FeatureExtraction command failed with exit code {exit_code}")
         return
 
 
-    with open(os.path.join(output_dir, csv_name), 'wb') as file:
-        for chunk in bits:
-            file.write(chunk)
+    print("working 1")
 
+    # Copy resulting CSV file back from Docker container
+    csv_name = image_filename.replace(".jpg", ".csv").replace(".png", ".csv")
+    container_csv_path = f"{temp_output_dir}/{csv_name}"
+    host_csv_path = os.path.join(output_dir, csv_name)
+
+    try:
+        with open(host_csv_path, 'wb') as f:
+            bits, _ = container.get_archive(container_csv_path)
+            for chunk in bits:
+                f.write(chunk)
+    except Exception as e:
+        print(f"Error: Could not retrieve the file {container_csv_path} - {e}")
+        return
+    
     frame = cv2.imread(image_path)
     # detect faces
     facePoints, face = imageProcessing.detectFace(frame)
     face = imageProcessing.preProcess(face, faceSize)
     # Obtain dimensional classification
     dimensionalRecognition = numpy.array(faceChannelDim.predict(face, preprocess=False))
-    # Read the generated CSV file
-    csv_name = os.path.basename(image_path)
-    csv_name = csv_name[:-4]
-    output_file = os.path.join(output_dir, f"{csv_name}.csv")
-    print(output_file)
+    
     data_to_send = []
+    output_file = os.path.join(output_dir, f"{csv_name}")
+    print(output_file)
     if os.path.exists(output_file):
         print("working 2")
         df = pd.read_csv(output_file)
@@ -224,15 +248,9 @@ def process_image(image_path, output_csv, current_time, mongo_key):
             #print("file written")
 
     # Clean up temporary output directory
-    """
-    for file in os.listdir(output_dir):
-        if os.path.isfile(os.path.join(output_dir, file)):
-        #chmod_fix(os.path.join(output_dir, file))
-        #os.remove(os.path.join(output_dir, file))
-        shutil.rmtree(os.path.join(output_dir, file), ignore_errors=False, onerror=handleRemoveReadonly)
-    """
-    container.exec_run(f"rm -rf /home/openface-build/build/bin/temp_output")
-    container.exec_run(f"rm /home/openface-build/build/bin/{os.path.basename(image_path)}")
+    
+    container.exec_run(f"rm -rf {container_csv_path}")
+    container.exec_run(f"rm /data/{container_image_path}")
 
     shutil.rmtree(output_dir, ignore_errors=False, onerror=handleRemoveReadonly)
 
