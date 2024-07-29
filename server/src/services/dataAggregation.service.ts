@@ -115,7 +115,8 @@ const expAISheetCol = [
     { header: 'Conversation ID', key: 'conversationId' },
     { header: 'user_input', key: 'user_input' },
     { header: 'prompt_input', key: 'prompt_input' },
-    { header: 'response', key: 'response' },
+    { header: 'response_1', key: 'response_1' },
+    { header: 'response_2', key: 'response_2' },
     { header: 'Message Number', key: 'messageNumber' },
     { header: 'Role', key: 'role' },
     { header: 'Valence', key: 'valence' },
@@ -325,6 +326,11 @@ class DataAggregationService {
                     console.log(agent.condition.cameraCaptureRate)
                     if ( agent.condition.cameraCaptureRate != null && agent.condition.vaIntegration != null ) {
                         conversation.expAIData.forEach((message) => {
+                            const response = message.response || "";
+                            const [firstLine, ...restLines] = response.split('\n');
+
+                            const firstLineContent = firstLine.trim(); // First line content
+                            const remainingContent = restLines.join('\n').trim(); // Remaining content
                             expAISheet.addRow({
                                 conversationId: {
                                     text: conversation.metadata._id,
@@ -332,7 +338,8 @@ class DataAggregationService {
                                 },
                                 user_input: message.user_input,
                                 prompt_input: message.prompt_input,
-                                response: message.response,
+                                response_1: firstLineContent,
+                                response_2: remainingContent,
                                 valence: message.valence,
                                 arousal: message.arousal,
                                 role: message.role,

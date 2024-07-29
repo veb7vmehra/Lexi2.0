@@ -327,7 +327,7 @@ class ConversationsService {
         const beforeUserMessage = { role: 'system', content: "" };
         const afterUserMessage = { role: 'system', content: "" };
         //console.log(message)
-        const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + ". What do you understand from these about the emotions expressed by the user? What behavioral qualities should be displayed while responding to this user to improve their mental state?"
+        const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + ". What do you understand from these about the emotions expressed by the user, describe in a line without mentioning the values of Valence and Arousal? What behavioral qualities should be displayed while responding to this user to improve their mental state?"
         message["content"] = final_message
         console.log(message)
         const messages: any = [
