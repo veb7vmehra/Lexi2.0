@@ -71,9 +71,11 @@ def add_or_update_data(id_value, data):
             updated_valence = existing_document["valence"] + data[0]
             updated_arousal = existing_document["arousal"] + data[1]
             count = existing_document["count"] + 1
+            valence_all = existing_document.get("valence_all", []) + [data[0]]
+            arousal_all = existing_document.get("arousal_all", []) + [data[1]]
             result = collection.update_one(
                 {"id": id_value},
-                {"$set": {"valence": updated_valence, "arousal": updated_arousal, "count": count}}
+                {"$set": {"valence": updated_valence, "arousal": updated_arousal, "count": count, "valence_all": valence_all, "arousal_all": arousal_all}}
             )
             if result.modified_count > 0:
                 print(f"Updated data for id '{id_value}': valence={updated_valence}, arousal={updated_arousal}")
@@ -81,7 +83,7 @@ def add_or_update_data(id_value, data):
                 print(f"Failed to update data for id '{id_value}'.")
         else:
             # If the document does not exist, insert new data
-            result = collection.insert_one({"id": id_value, "valence": data[0], "arousal": data[1], "count": 1})
+            result = collection.insert_one({"id": id_value, "valence": data[0], "arousal": data[1], "count": 1, "valence_all": [data[0]], "arousal_all": [data[1]]})
             if result.inserted_id:
                 print(f"Inserted new data for id '{id_value}': valence={data[0]}, arousal={data[1]}")
             else:
