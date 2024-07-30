@@ -349,9 +349,9 @@ const AgentForm: React.FC<AgentFormProps> = ({
             )}
             {renderCheckbox('vaIntegration', 'vaIntegration', slidersEnabled.vaIntegrationEnabled)}
             <FormControl fullWidth margin="normal" size="small">
-                <InputLabel id="agent-select-label">Valence Integration Option</InputLabel>
+                <InputLabel id="valOption-select-label">Valence Integration Option</InputLabel>
                 <Select
-                    labelId="agent-select-label"
+                    labelId="valOption-select-label"
                     value={agent.valOption}
                     onChange={handleChange}
                     label="valOptions"
@@ -365,9 +365,9 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 </Select>
             </FormControl>
             <FormControl fullWidth margin="normal" size="small">
-                <InputLabel id="agent-select-label">Arousal Integration Option</InputLabel>
+                <InputLabel id="arOption-select-label">Arousal Integration Option</InputLabel>
                 <Select
-                    labelId="agent-select-label"
+                    labelId="arOption-select-label"
                     value={agent.arOption}
                     onChange={handleChange}
                     label="arOptions"
