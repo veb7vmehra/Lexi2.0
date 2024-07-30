@@ -44,16 +44,26 @@ class ConversationsService {
         //let tempt = await CurrentStateModels.find({ }).exec();
         //console.log(tempt)
         let val = 0;
-        let ar = 0
+        let ar = 0;
+        let val_max = 0;
+        let val_min = 0;
+        let ar_max = 0;
+        let ar_min = 0;
         
         if ( ccr != null && vai != null ) {
             const current_state = await this.getCurrentState(conversationId)
             val = current_state[0]["valence"] / current_state[0]["count"]
             ar = current_state[0]["arousal"] / current_state[0]["count"]
+            val_max = Math.max(...current_state[0]["valence_all"])
+            val_min = Math.min(...current_state[0]["valence_all"])
+            ar_max = Math.max(...current_state[0]["arousal_all"])
+            ar_min = Math.min(...current_state[0]["arousal_all"]) 
+
             await this.updateCurrentState(conversationId, 0, 0, 0);
         }
         //console.log(current_state[0]["valence"])
         //console.log(current_state[0]["arousal"])
+        console.log(val_max, ar_min)
         
         const og_text = { ...message };
         //console.log(og_text)
@@ -212,6 +222,8 @@ class ConversationsService {
             current_state.valence = valence;
             current_state.arousal = arousal;
             current_state.count = count;
+            current_state.valence_all = []
+            current_state.arousal_all = []
     
             // Save the updated document
             const updated_state = await current_state.save();

@@ -8,6 +8,8 @@ export const currentStateSchema = new Schema<ICurrentState>(
         valence: { type: Number, required: true },
         arousal: { type: Number, required: true },
         count: { type: Number, required: true },
+        valence_all: { type: [Number], required: true }, 
+        arousal_all: { type: [Number], required: true }, 
     },
     { versionKey: false, collection: 'current_state' },
 );

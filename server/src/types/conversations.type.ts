@@ -58,4 +58,6 @@ export interface ICurrentState {
     valence: number;
     arousal: number;
     count: number;
+    valence_all: number[]; 
+    arousal_all: number[];
 }
