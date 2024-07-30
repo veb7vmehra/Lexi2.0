@@ -1,4 +1,4 @@
-import { agentsOptions, defaultSettings, defaultSliderSettings, initialSlidersEnabled } from '@DAL/constants';
+import { agentsOptions, defaultSettings, defaultSliderSettings, initialSlidersEnabled, valOptions, arOptions } from '@DAL/constants';
 import { saveAgent, updateAgent, downloadSample, uploadRuleSheet } from '@DAL/server-requests/agents';
 import { ChipsInput } from '@components/common/ChipsInput';
 import { SnackbarStatus, useSnackbar } from '@contexts/SnackbarProvider';
@@ -348,6 +348,38 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 </Box>
             )}
             {renderCheckbox('vaIntegration', 'vaIntegration', slidersEnabled.vaIntegrationEnabled)}
+            <FormControl fullWidth margin="normal" size="small">
+                <InputLabel id="agent-select-label">Valence Integration Option</InputLabel>
+                <Select
+                    labelId="agent-select-label"
+                    value={agent.valOption}
+                    onChange={handleChange}
+                    label="valOptions"
+                    name="valOptions"
+                >
+                    {valOptions.map((agent) => (
+                        <MenuItem key={agent} value={agent}>
+                            {agent}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal" size="small">
+                <InputLabel id="agent-select-label">Arousal Integration Option</InputLabel>
+                <Select
+                    labelId="agent-select-label"
+                    value={agent.arOption}
+                    onChange={handleChange}
+                    label="arOptions"
+                    name="arOptions"
+                >
+                    {arOptions.map((agent) => (
+                        <MenuItem key={agent} value={agent}>
+                            {agent}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
             <ChipsInput
                 list={agent.stopSequences}
                 setList={(stops) => setAgent({ ...agent, stopSequences: stops })}

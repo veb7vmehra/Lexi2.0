@@ -11,8 +11,8 @@ export interface IConversation {
     timestamp: number;
     messageNumber: number;
     userAnnotation: UserAnnotation;
-    valence: number;
-    arousal: number;
+    valence: number[];
+    arousal: number[];
 }
 
 export interface IExplainable {
@@ -24,8 +24,8 @@ export interface IExplainable {
     createdAt: Date;
     timestamp: number;
     messageNumber: number;
-    valence: number;
-    arousal: number;
+    valence: number[];
+    arousal: number[];
     //userAnnotation: UserAnnotation;
 }
 

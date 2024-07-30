@@ -37,37 +37,37 @@ class ConversationsService {
         //console.log(agent)
         const ccr = agent.cameraCaptureRate
         const vai = agent.vaIntegration
+        const valOption = agent.valOption
+        const arOption = agent.arOption
         //console.log("vai", vai)
         //console.log("ccr", ccr)
         delete agent.cameraCaptureRate;
         delete agent.vaIntegration;
+        delete agent.valOption;
+        delete agent.arOption;
         //let tempt = await CurrentStateModels.find({ }).exec();
         //console.log(tempt)
-        let val = 0;
-        let ar = 0;
-        let val_max = 0;
-        let val_min = 0;
-        let ar_max = 0;
-        let ar_min = 0;
+        let val: number[];
+        let ar: number[];
         
         if ( ccr != null && vai != null ) {
             const current_state = await this.getCurrentState(conversationId)
-            val = current_state[0]["valence"] / current_state[0]["count"]
-            ar = current_state[0]["arousal"] / current_state[0]["count"]
-            val_max = Math.max(...current_state[0]["valence_all"])
-            val_min = Math.min(...current_state[0]["valence_all"])
-            ar_max = Math.max(...current_state[0]["arousal_all"])
-            ar_min = Math.min(...current_state[0]["arousal_all"]) 
+            val.push(current_state[0]["valence"] / current_state[0]["count"])
+            ar.push(current_state[0]["arousal"] / current_state[0]["count"])
+            val.push(Math.max(...current_state[0]["valence_all"]))
+            val.push(Math.min(...current_state[0]["valence_all"]))
+            ar.push(Math.max(...current_state[0]["arousal_all"]))
+            ar.push(Math.min(...current_state[0]["arousal_all"]))
 
             await this.updateCurrentState(conversationId, 0, 0, 0);
         }
         //console.log(current_state[0]["valence"])
         //console.log(current_state[0]["arousal"])
-        console.log(val_max, ar_min)
+        //console.log(val_max, ar_min)
         
         const og_text = { ...message };
         //console.log(og_text)
-        const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr, vai);
+        const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr, vai, valOption, arOption);
         const chatRequest = this.getChatRequest(agent, messages);
         await this.createMessageDoc(og_text, conversationId, conversation.length + 1, val, ar);
 
@@ -103,7 +103,7 @@ class ConversationsService {
         });
 
         if ( ccr != null && vai != null ) {
-            const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar);
+            const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar, valOption, arOption);
             const ExchatRequest = this.getChatRequest(agent, Exmessages);
 
             let ExassistantMessage = '';        
@@ -313,13 +313,34 @@ class ConversationsService {
         }
     };
 
-    private getConversationMessages = (agent: IAgent, conversation: Message[], message: Message, val: number, ar: number, ccr, vai) => {
+    private getConversationMessages = (agent: IAgent, conversation: Message[], message: Message, val, ar, ccr, vai, valOption, arOption) => {
         const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
         const beforeUserMessage = { role: 'system', content: agent.beforeUserSentencePrompt };
         const afterUserMessage = { role: 'system', content: agent.afterUserSentencePrompt };
 	
         if ( ccr != null && vai != null ) {
-            const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + " while user replies to you " + message["content"] + " (Do not share the Valence Arousal values with user.)"
+            let v_text = "";
+            let a_text = "";
+            if (valOption === "mean") {
+                v_text = "The valence of the user is "+ val[0].toString()
+            } else if (valOption === "max") {
+                v_text = "The valence of the user is "+ val[1].toString()
+            } else if (valOption === "min") {
+                v_text = "The valence of the user is "+ val[2].toString()
+            } else if (valOption === "all") {
+                v_text = "The average valence of the user is "+ val[0].toString() + "while the range of Valence is from "+ val[2].toString() + " to " + val[1].toString()
+            }
+
+            if (arOption === "mean") {
+                a_text = " and the arousal of the user is "+ ar[0].toString()
+            } else if (arOption === "max") {
+                a_text = " and the arousal of the user is "+ ar[1].toString()
+            } else if (arOption === "min") {
+                a_text = " and the arousal of the user is "+ ar[2].toString()
+            } else if (arOption === "all") {
+                v_text = " and the average arousal of the user is "+ ar[0].toString() + "while the range of arousal is from "+ ar[2].toString() + " to " + ar[1].toString()
+            }
+            const final_message = v_text + a_text + " while user replies to you " + message["content"] + " (Do not share the Valence Arousal values with user.)"
             message["content"] = final_message
         }
 	//message["content"] = agent.beforeUserSentencePrompt + " " + message["content"] + " " + agent.afterUserSentencePrompt
@@ -336,12 +357,33 @@ class ConversationsService {
         return messages;
     };
 
-    private getExplainableText = (settings: any, conversation: any[], message: any, val: number, ar: number) => {
+    private getExplainableText = (settings: any, conversation: any[], message: any, val, ar, valOption, arOption) => {
         const systemPrompt: Message = { role: 'system', content: "" };
         const beforeUserMessage = { role: 'system', content: "" };
         const afterUserMessage = { role: 'system', content: "" };
         //console.log(message)
-        const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + ". What do you understand from these about the emotions expressed by the user. In a sentence, describe the user's expressed emotion and mental states in a psychological manner, without mentioning the valence and arousal values."
+        let v_text = "";
+        let a_text = "";
+        if (valOption === "mean") {
+            v_text = "The valence of the user is "+ val[0].toString()
+        } else if (valOption === "max") {
+            v_text = "The valence of the user is "+ val[1].toString()
+        } else if (valOption === "min") {
+            v_text = "The valence of the user is "+ val[2].toString()
+        } else if (valOption === "all") {
+            v_text = "The average valence of the user is "+ val[0].toString() + "while the range of Valence is from "+ val[2].toString() + " to " + val[1].toString()
+        }
+
+        if (arOption === "mean") {
+            a_text = " and the arousal of the user is "+ ar[0].toString()
+        } else if (arOption === "max") {
+            a_text = " and the arousal of the user is "+ ar[1].toString()
+        } else if (arOption === "min") {
+            a_text = " and the arousal of the user is "+ ar[2].toString()
+        } else if (arOption === "all") {
+            v_text = " and the average arousal of the user is "+ ar[0].toString() + "while the range of arousal is from "+ ar[2].toString() + " to " + ar[1].toString()
+        }
+        const final_message = v_text + a_text + ". What do you understand from these about the emotions expressed by the user. In a sentence, describe the user's expressed emotion and mental states in a psychological manner, without mentioning the valence and arousal values."
         message["content"] = final_message
         console.log(message)
         const messages: any = [
@@ -360,22 +402,22 @@ class ConversationsService {
         message: Message,
         conversationId: string,
         messageNumber: number,
-        val: number,
-        ar: number,
+        val,
+        ar,
     ): Promise<Message> => {
         const res = await ConversationsModel.create({
             content: message.content,
             role: message.role,
             conversationId,
             messageNumber,
-            valence: val,
-            arousal: ar,
+            valence: val[0],
+            arousal: ar[0],
         });
 
         return { _id: res._id, role: res.role, content: res.content, userAnnotation: res.userAnnotation };
     };
 
-    private createExplainableDoc = async (og_text: Message, message: Message, resp: Message, conversationId: string, messageNumber: number, val:number, ar:number) => {
+    private createExplainableDoc = async (og_text: Message, message: Message, resp: Message, conversationId: string, messageNumber: number, val, ar) => {
         const res = await ExplainableModel.create({
             user_input: og_text.content,
             prompt_input: message.content,

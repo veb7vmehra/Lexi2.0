@@ -84,6 +84,12 @@ export const AgentDetails = ({ agent }) => (
                     />
                 </ListItem>
                 <ListItem>
+                    <ListItemText primary="Valence Integration Option" secondary={agent.valOption} />
+                </ListItem>
+                <ListItem>
+                    <ListItemText primary="Arousal Integration Option" secondary={agent.arOption} />
+                </ListItem>
+                <ListItem>
                     <ListItemText
                         primary="Stop Sequences"
                         secondary={agent.stopSequences.length ? agent.stopSequences.join(', ') : 'Not Active'}

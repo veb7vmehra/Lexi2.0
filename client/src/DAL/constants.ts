@@ -12,6 +12,9 @@ export const defaultSliderSettings = {
 
 export const agentsOptions = ['gpt-3.5-turbo', 'gpt-4-1106-preview', 'gpt-4o', 'gpt-4o-mini'] as const;
 
+export const valOptions = ['mean', 'max', 'min', 'all']
+export const arOptions = ['mean', 'max', 'min', 'all']
+
 export const defaultSettings: AgentType = {
     _id: '',
     title: '',
@@ -28,6 +31,8 @@ export const defaultSettings: AgentType = {
     presencePenalty: null,
     cameraCaptureRate: null,
     vaIntegration: null,
+    valOption: valOptions[0],
+    arOption: arOptions[0],
     stopSequences: [],
 };
 
