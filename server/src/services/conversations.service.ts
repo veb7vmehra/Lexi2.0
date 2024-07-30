@@ -175,7 +175,7 @@ class ConversationsService {
         };
         console.log(firstMessage)
         await Promise.all([
-            this.createMessageDoc(firstMessage, res._id.toString(), 1, 0, 0),
+            this.createMessageDoc(firstMessage, res._id.toString(), 1, [0, 0, 0], [0, 0, 0]),
             usersService.addConversation(userId),
             !user.isAdmin && experimentsService.addSession(experimentId),
         ]);
@@ -410,8 +410,8 @@ class ConversationsService {
             role: message.role,
             conversationId,
             messageNumber,
-            valence: val[0],
-            arousal: ar[0],
+            valence: val,
+            arousal: ar,
         });
 
         return { _id: res._id, role: res.role, content: res.content, userAnnotation: res.userAnnotation };
