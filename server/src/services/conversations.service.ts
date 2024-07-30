@@ -305,10 +305,12 @@ class ConversationsService {
         const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
         const beforeUserMessage = { role: 'system', content: agent.beforeUserSentencePrompt };
         const afterUserMessage = { role: 'system', content: agent.afterUserSentencePrompt };
+	
         if ( ccr != null && vai != null ) {
             const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + " while user replies to you " + message["content"] + " (Do not share the Valence Arousal values with user.)"
             message["content"] = final_message
         }
+	//message["content"] = agent.beforeUserSentencePrompt + " " + message["content"] + " " + agent.afterUserSentencePrompt
         console.log(message)
         const messages = [
             systemPrompt,
@@ -327,7 +329,7 @@ class ConversationsService {
         const beforeUserMessage = { role: 'system', content: "" };
         const afterUserMessage = { role: 'system', content: "" };
         //console.log(message)
-        const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + ". What do you understand from these about the emotions expressed by the user, describe in a line without mentioning the values of Valence and Arousal? What behavioral qualities should be displayed while responding to this user to improve their mental state?"
+        const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + ". What do you understand from these about the emotions expressed by the user. In a sentence, describe the user's expressed emotion and mental states in a psychological manner, without mentioning the valence and arousal values."
         message["content"] = final_message
         console.log(message)
         const messages: any = [
