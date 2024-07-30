@@ -47,8 +47,8 @@ class ConversationsService {
         delete agent.arOption;
         //let tempt = await CurrentStateModels.find({ }).exec();
         //console.log(tempt)
-        let val: number[];
-        let ar: number[];
+        let val: number[] = [];
+        let ar: number[] = [];
         
         if ( ccr != null && vai != null ) {
             const current_state = await this.getCurrentState(conversationId)
