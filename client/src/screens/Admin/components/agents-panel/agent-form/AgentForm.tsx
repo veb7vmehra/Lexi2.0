@@ -354,8 +354,8 @@ const AgentForm: React.FC<AgentFormProps> = ({
                     labelId="valOption-select-label"
                     value={agent.valOption}
                     onChange={handleChange}
-                    label="valOptions"
-                    name="valOptions"
+                    label="valOption"
+                    name="valOption"
                 >
                     {valOptions.map((agent) => (
                         <MenuItem key={agent} value={agent}>
@@ -370,8 +370,8 @@ const AgentForm: React.FC<AgentFormProps> = ({
                     labelId="arOption-select-label"
                     value={agent.arOption}
                     onChange={handleChange}
-                    label="arOptions"
-                    name="arOptions"
+                    label="arOption"
+                    name="arOption"
                 >
                     {arOptions.map((agent) => (
                         <MenuItem key={agent} value={agent}>
