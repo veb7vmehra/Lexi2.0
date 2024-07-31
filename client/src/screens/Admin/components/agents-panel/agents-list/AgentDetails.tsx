@@ -89,6 +89,14 @@ export const AgentDetails = ({ agent }) => (
                 <ListItem>
                     <ListItemText primary="Arousal Integration Option" secondary={agent.arOption} />
                 </ListItem>
+                {agent.explainabilityPrompt && (
+                    <ListItem>
+                        <ListItemText
+                            primary="Explainability Prompt"
+                            secondary={agent.explainabilityPrompt}
+                        />
+                    </ListItem>
+                )}
                 <ListItem>
                     <ListItemText
                         primary="Stop Sequences"

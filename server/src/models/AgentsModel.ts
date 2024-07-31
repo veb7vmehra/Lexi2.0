@@ -20,6 +20,7 @@ export const agentsSchema = new Schema<IAgent>(
         vaIntegration: { type: Number },
         valOption: { type: String, default: "mean"},
         arOption: { type: String, default: "mean"},
+        explainabilityPrompt: { type: String, required: false, default: "What do you understand from these about the emotions expressed by the user. In a sentence, describe the user's expressed emotion and mental states in a psychological manner, without mentioning the valence and arousal values."},
         stopSequences: { type: [String] },
         createdAt: { type: Date, default: Date.now },
         timestamp: { type: Number, default: () => Date.now() },

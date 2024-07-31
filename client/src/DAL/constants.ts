@@ -33,6 +33,7 @@ export const defaultSettings: AgentType = {
     vaIntegration: null,
     valOption: valOptions[0],
     arOption: arOptions[0],
+    explainabilityPrompt: '',
     stopSequences: [],
 };
 

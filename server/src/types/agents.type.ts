@@ -18,6 +18,7 @@ export interface IAgent {
     vaIntegration: number;
     valOption: string,
     arOption: string,
+    explainabilityPrompt: string,
     stopSequences: string[];
     createdAt: Date;
     timestamp: number;

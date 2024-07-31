@@ -380,6 +380,15 @@ const AgentForm: React.FC<AgentFormProps> = ({
                     ))}
                 </Select>
             </FormControl>
+            <TextField
+                fullWidth
+                label="Explainability Prompt"
+                name="explainabilityPrompt"
+                value={agent.explainabilityPrompt}
+                onChange={handleChange}
+                size="small"
+                margin="normal"
+            />
             <ChipsInput
                 list={agent.stopSequences}
                 setList={(stops) => setAgent({ ...agent, stopSequences: stops })}

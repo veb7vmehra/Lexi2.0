@@ -39,12 +39,14 @@ class ConversationsService {
         const vai = agent.vaIntegration
         const valOption = agent.valOption
         const arOption = agent.arOption
+        const explainabilityPrompt = agent.explainabilityPrompt
         //console.log("vai", vai)
         //console.log("ccr", ccr)
         delete agent.cameraCaptureRate;
         delete agent.vaIntegration;
         delete agent.valOption;
         delete agent.arOption;
+        delete agent.explainabilityPrompt;
         //let tempt = await CurrentStateModels.find({ }).exec();
         //console.log(tempt)
         let val: number[] = [];
@@ -103,7 +105,7 @@ class ConversationsService {
         });
 
         if ( ccr != null && vai != null ) {
-            const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar, valOption, arOption);
+            const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar, valOption, arOption, explainabilityPrompt);
             const ExchatRequest = this.getChatRequest(agent, Exmessages);
 
             let ExassistantMessage = '';        
@@ -357,7 +359,7 @@ class ConversationsService {
         return messages;
     };
 
-    private getExplainableText = (settings: any, conversation: any[], message: any, val, ar, valOption, arOption) => {
+    private getExplainableText = (settings: any, conversation: any[], message: any, val, ar, valOption, arOption, explainabilityPrompt) => {
         const systemPrompt: Message = { role: 'system', content: "" };
         const beforeUserMessage = { role: 'system', content: "" };
         const afterUserMessage = { role: 'system', content: "" };
@@ -383,7 +385,7 @@ class ConversationsService {
         } else if (arOption === "all") {
             v_text = " and the average arousal of the user is "+ ar[0].toString() + "while the range of arousal is from "+ ar[2].toString() + " to " + ar[1].toString()
         }
-        const final_message = v_text + a_text + ". What do you understand from these about the emotions expressed by the user. In a sentence, describe the user's expressed emotion and mental states in a psychological manner, without mentioning the valence and arousal values."
+        const final_message = v_text + a_text + ". " + explainabilityPrompt
         message["content"] = final_message
         console.log(message)
         const messages: any = [

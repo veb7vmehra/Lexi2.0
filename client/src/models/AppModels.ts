@@ -66,6 +66,7 @@ export interface AgentType {
     cameraCaptureRate: number;
     valOption: string;
     arOption:string;
+    explainabilityPrompt: string;
     vaIntegration: number;
     stopSequences: { value: string; id: string }[];
     createdAt?: Date;
