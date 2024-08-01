@@ -330,7 +330,7 @@ class ConversationsService {
             } else if (valOption === "min") {
                 v_text = "The valence of the user is "+ val[2].toString()
             } else if (valOption === "all") {
-                v_text = "The average valence of the user is "+ val[0].toString() + "while the range of Valence is from "+ val[2].toString() + " to " + val[1].toString()
+                v_text = "The average valence of the user is "+ val[0].toString() + " while the range of Valence is from "+ val[2].toString() + " to " + val[1].toString()
             }
 
             if (arOption === "mean") {
@@ -340,7 +340,7 @@ class ConversationsService {
             } else if (arOption === "min") {
                 a_text = " and the arousal of the user is "+ ar[2].toString()
             } else if (arOption === "all") {
-                v_text = " and the average arousal of the user is "+ ar[0].toString() + "while the range of arousal is from "+ ar[2].toString() + " to " + ar[1].toString()
+                v_text = " and the average arousal of the user is "+ ar[0].toString() + " while the range of arousal is from "+ ar[2].toString() + " to " + ar[1].toString()
             }
             const final_message = v_text + a_text + " while user replies to you " + message["content"] + " (Do not share the Valence Arousal values with user.)"
             message["content"] = final_message

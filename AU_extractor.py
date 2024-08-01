@@ -37,8 +37,6 @@ faceSize = (64,64) # Input size for both models: categorical and dimensional
 
 # Path to the parent folder
 parent_folder = "./server/webcamBase"
-# Path to OpenFace FeatureExtraction executable
-#openface_exe = "./openFace/FaceLandmarkImg.exe"
 # Path to the directory where CSV files will be saved
 csv_output_dir = "./server/action_units"
 
@@ -77,17 +75,21 @@ def add_or_update_data(id_value, data):
                 {"id": id_value},
                 {"$set": {"valence": updated_valence, "arousal": updated_arousal, "count": count, "valence_all": valence_all, "arousal_all": arousal_all}}
             )
+            """
             if result.modified_count > 0:
                 print(f"Updated data for id '{id_value}': valence={updated_valence}, arousal={updated_arousal}")
             else:
                 print(f"Failed to update data for id '{id_value}'.")
+            """
         else:
             # If the document does not exist, insert new data
             result = collection.insert_one({"id": id_value, "valence": data[0], "arousal": data[1], "count": 1, "valence_all": [data[0]], "arousal_all": [data[1]]})
+            """
             if result.inserted_id:
                 print(f"Inserted new data for id '{id_value}': valence={data[0]}, arousal={data[1]}")
             else:
                 print(f"Failed to insert data for id '{id_value}'.")
+            """
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -114,7 +116,7 @@ def process_child_folder(child_folder):
         os.mkdir(output_csv)
     mongo_key = child_folder_name[0]
     output_csv = os.path.join(output_csv, f"{child_folder_name[0]}.csv")
-    print(output_csv)
+    #print(output_csv)
     last_image_time = time.time()
 
     while True:
@@ -148,57 +150,16 @@ def process_image(image_path, output_csv, current_time, mongo_key):
     output_dir = os.path.join(os.path.dirname(image_path), "temp_output")
     os.makedirs(output_dir, exist_ok=True)
 
-    """
-    # Create a tar archive of the image
-    tar_stream = io.BytesIO()
-    with tarfile.open(fileobj=tar_stream, mode='w') as tar:
-        tar.add(image_path, arcname=os.path.basename(image_path))
-    tar_stream.seek(0)
-
-    # Copy image to Docker container
-    try:
-        container.put_archive('/home/openface-build/build/bin/', tar_stream)
-    except docker.errors.NotFound as e:
-        print(f"Error: {e}")
-        # List directories in the root to find the correct path
-        bits, stat = container.get_archive('/')
-        with tarfile.open(fileobj=io.BytesIO(bits.read())) as tar:
-            for member in tar.getmembers():
-                print(member.name)
-        return
-    except docker.errors.APIError as e:
-        print(f"API Error: {e}")
-        return
-
     image_filename = os.path.basename(image_path)
-    exit_code, output = container.exec_run(f"ls /home/openface-build/build/bin/")
-    print(f"Files in container directory before processing: {output.decode('utf-8')}")
-    if image_filename not in output.decode('utf-8'):
-        print(f"Error: {image_filename} not found in container directory.")
-        return
-
-
-    # Run OpenFace FeatureExtraction tool
-    #subprocess.run([openface_exe, "-f", image_path, "-out_dir", output_dir])
-    command = f"./FaceLandmarkImg -f {image_filename} -out_dir temp_output"
-    print(f"Running command: {command}")
-    exit_code, output = container.exec_run(command, workdir='/home/openface-build/build/bin')
-    print(f"Command output: {output.decode('utf-8')}")
-    if exit_code != 0:
-        print(f"Error: FeatureExtraction command failed with exit code {exit_code}")
-        return
-    """
-
-    image_filename = os.path.basename(image_path)
-    print(image_path)
+    #print(image_path)
     container_image_path = image_path.replace(parent_folder, '/data')
     face_landmark_executable = "/home/openface-build/build/bin/FaceLandmarkImg"
-    print("IMAGE PATH", container_image_path)
+    #print("IMAGE PATH", container_image_path)
 
     command = f"{face_landmark_executable} -f {container_image_path} -out_dir {temp_output_dir}"
-    print(f"Running command: {command}")
+    #print(f"Running command: {command}")
     exit_code, output = container.exec_run(command)
-    print(f"Command output: {output.decode('utf-8')}")
+    #print(f"Command output: {output.decode('utf-8')}")
     if exit_code != 0:
         print(f"Error: FeatureExtraction command failed with exit code {exit_code}")
         return
@@ -229,7 +190,7 @@ def process_image(image_path, output_csv, current_time, mongo_key):
     
     data_to_send = []
     output_file = os.path.join(output_dir, f"{csv_name}")
-    print(output_file)
+    #print(output_file)
     if os.path.exists(output_file):
         print("working 2")
         df = pd.read_csv(output_file)
