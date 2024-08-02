@@ -8,6 +8,7 @@ import {
     Checkbox,
     CircularProgress,
     FormControl,
+    FormHelperText,
     InputLabel,
     MenuItem,
     Select,
@@ -380,6 +381,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                     ))}
                 </Select>
             </FormControl>
+            <FormControl fullWidth margin="normal" size="small"></FormControl>
             <TextField
                 fullWidth
                 label="Explainability Prompt"
@@ -389,6 +391,8 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 size="small"
                 margin="normal"
             />
+            <FormHelperText>This prompt will be added after passing the Valence arousal values.</FormHelperText>
+            </FormControl>
             <ChipsInput
                 list={agent.stopSequences}
                 setList={(stops) => setAgent({ ...agent, stopSequences: stops })}
