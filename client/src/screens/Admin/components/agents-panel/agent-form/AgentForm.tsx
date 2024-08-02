@@ -236,6 +236,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
             setExplainabilityPrompt(event.target.value);
             handleChange(event);
     };
+    }
 
     return (
         <MainContainer maxWidth="md" style={{ paddingBottom: '32px' }}>
