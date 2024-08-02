@@ -227,6 +227,16 @@ const AgentForm: React.FC<AgentFormProps> = ({
         </FormControl>
     );
 
+    const YourComponent = ({ agent, handleChange }) => {
+        // Initialize state with the default value
+        const defaultPrompt = "What do you understand from these about the emotions expressed by the user. In a sentence, describe the user's expressed emotion and mental states in a psychological manner, without mentioning the valence and arousal values.";
+        const [explainabilityPrompt, setExplainabilityPrompt] = useState(agent.explainabilityPrompt || defaultPrompt);
+    
+        const handlePromptChange = (event) => {
+            setExplainabilityPrompt(event.target.value);
+            handleChange(event);
+    };
+
     return (
         <MainContainer maxWidth="md" style={{ paddingBottom: '32px' }}>
             <Typography variant="h4" gutterBottom margin="normal">
@@ -384,15 +394,21 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 </Select>
             </FormControl>
             <TextField
-                fullWidth
-		multiline
-		rows={8}
-                label="Explainability Prompt"
-                name="explainabilityPrompt"
-                value={agent.explainabilityPrompt}
-                onChange={handleChange}
-                size="small"
-                margin="normal"
+            fullWidth
+            multiline
+            rows={8}
+            label="Explainability Prompt"
+            name="explainabilityPrompt"
+            value={explainabilityPrompt}
+            onChange={handlePromptChange}
+            size="small"
+            margin="normal"
+            variant="outlined" // Use outlined variant for better visual presentation
+            InputProps={{
+                style: {
+                    whiteSpace: 'pre-wrap', // Ensure text wraps properly
+                },
+            }}
             />
             <ChipsInput
                 list={agent.stopSequences}
