@@ -60,7 +60,10 @@ const AgentForm: React.FC<AgentFormProps> = ({
             : initialSlidersEnabled,
     );
 
-    const [agent, setAgent] = useState<any>(editAgent ? editAgent : defaultSettings);
+    const defaultPrompt = "What do you understand from these about the emotions expressed by the user. In a sentence, describe the user's expressed emotion and mental states in a psychological manner, without mentioning the valence and arousal values.";
+    const [agent, setAgent] = useState<any>(editAgent ? editAgent : { ...defaultSettings, explainabilityPrompt: defaultPrompt });
+    const [explainabilityPrompt, setExplainabilityPrompt] = useState(agent.explainabilityPrompt);
+
     const updateAgentInList = (updatedAgent: AgentType) => {
         const updatedSettings = agents.map((agent: AgentType) =>
             agent._id === updatedAgent._id ? updatedAgent : agent,
@@ -82,6 +85,9 @@ const AgentForm: React.FC<AgentFormProps> = ({
     const handleChange = (event) => {
         const { name, value } = event.target;
         setAgent({ ...agent, [name]: value });
+        if (name === 'explainabilityPrompt') {
+            setExplainabilityPrompt(value);
+        }
     };
 
     const handleConfirmUpdate = async () => {
@@ -226,17 +232,6 @@ const AgentForm: React.FC<AgentFormProps> = ({
             </Box>
         </FormControl>
     );
-
-    const YourComponent = ({ agent, handleChange }) => {
-        // Initialize state with the default value
-        const defaultPrompt = "What do you understand from these about the emotions expressed by the user. In a sentence, describe the user's expressed emotion and mental states in a psychological manner, without mentioning the valence and arousal values.";
-        const [explainabilityPrompt, setExplainabilityPrompt] = useState(agent.explainabilityPrompt || defaultPrompt);
-    
-        const handlePromptChange = (event) => {
-            setExplainabilityPrompt(event.target.value);
-            handleChange(event);
-    };
-    }
 
     return (
         <MainContainer maxWidth="md" style={{ paddingBottom: '32px' }}>
@@ -395,21 +390,17 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 </Select>
             </FormControl>
             <TextField
-            fullWidth
-            multiline
-            rows={8}
-            label="Explainability Prompt"
-            name="explainabilityPrompt"
-            value={explainabilityPrompt}
-            onChange={handlePromptChange}
-            size="small"
-            margin="normal"
-            variant="outlined" // Use outlined variant for better visual presentation
-            InputProps={{
-                style: {
-                    whiteSpace: 'pre-wrap', // Ensure text wraps properly
-                },
-            }}
+                maxRows={4}
+                rows={4}
+                multiline
+                fullWidth
+                required
+                label="Explainability Prompt"
+                name="explainabilityPrompt"
+                value={explainabilityPrompt}
+                onChange={handleChange}
+                size="small"
+                margin="normal"
             />
             <ChipsInput
                 list={agent.stopSequences}
