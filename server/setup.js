@@ -105,6 +105,7 @@ const foldersToCreate = [
   console.log(colors.cyan, `${emojis.info} Installing types...`, colors.reset);
   execSync("npm i --save-dev @types/node", { stdio: "inherit" });
 
+  console.log('Connecting to MongoDB with URL:', process.env.MONGODB_URL);
   console.log(
     colors.cyan,
     `${emojis.info} Building the project...`,

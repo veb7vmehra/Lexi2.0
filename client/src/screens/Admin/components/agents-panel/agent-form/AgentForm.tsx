@@ -170,9 +170,10 @@ const AgentForm: React.FC<AgentFormProps> = ({
         field: string,
         name: string,
         enabled: boolean,
+	label: string,
     ) => (
         <FormControl fullWidth margin="normal">
-            <Typography gutterBottom>{field.charAt(0).toUpperCase() + field.slice(1)}</Typography>
+            <Typography gutterBottom>{label}</Typography>
             <Box display="flex" alignItems="center" gap={1}>
                 <Checkbox
                     checked={enabled}
@@ -185,6 +186,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                     }}
                     name={`${field}Enabled`}
                 />
+		
             </Box>
         </FormControl>
     );
@@ -331,7 +333,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 0.01,
                 slidersEnabled.presencePenaltyEnabled,
             )}
-            {renderCheckbox('cameraCaptureRate', 'cameraCaptureRate', slidersEnabled.cameraCaptureRateEnabled)}
+            {renderCheckbox('cameraCaptureRate', 'cameraCaptureRate', slidersEnabled.cameraCaptureRateEnabled, 'Extracting Camera based Features')}
             {slidersEnabled.cameraCaptureRateEnabled && (
                 <Box display="flex" justifyContent="space-between" margin="normal">
                     <Button variant="outlined" onClick={downloadSample}>
@@ -348,14 +350,14 @@ const AgentForm: React.FC<AgentFormProps> = ({
                     </Button>
                 </Box>
             )}
-            {renderCheckbox('vaIntegration', 'vaIntegration', slidersEnabled.vaIntegrationEnabled)}
+            {renderCheckbox('vaIntegration', 'vaIntegration', slidersEnabled.vaIntegrationEnabled, 'Integrating Valence and Arousal to Conversation Pipeline')}
             <FormControl fullWidth margin="normal" size="small">
                 <InputLabel id="valOption-select-label">Valence Integration Option</InputLabel>
                 <Select
                     labelId="valOption-select-label"
                     value={agent.valOption}
                     onChange={handleChange}
-                    label="valOption"
+                    label="Valence Integration Option"
                     name="valOption"
                 >
                     {valOptions.map((agent) => (
@@ -371,7 +373,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                     labelId="arOption-select-label"
                     value={agent.arOption}
                     onChange={handleChange}
-                    label="arOption"
+                    label="Arousal Integration Option"
                     name="arOption"
                 >
                     {arOptions.map((agent) => (
@@ -383,6 +385,8 @@ const AgentForm: React.FC<AgentFormProps> = ({
             </FormControl>
             <TextField
                 fullWidth
+		multiline
+		rows={8}
                 label="Explainability Prompt"
                 name="explainabilityPrompt"
                 value={agent.explainabilityPrompt}
