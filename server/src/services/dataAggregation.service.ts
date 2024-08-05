@@ -335,8 +335,8 @@ class DataAggregationService {
                             userAnnotation: message.userAnnotation,
                         });
                     });
-                    console.log(agent.condition.cameraCaptureRate)
-                    if ( agent.title === "vebAgent" || (agent.condition.cameraCaptureRate != null && agent.condition.vaIntegration != null) ) {
+                    console.log(agent.condition.title)
+                    if ( agent.condition.title === "vebAgent" || (agent.condition.cameraCaptureRate != null && agent.condition.vaIntegration != null) ) {
                         conversation.expAIData.forEach((message) => {
                             const response = message.response || "";
                             const [firstLine, ...restLines] = response.split('\n');
