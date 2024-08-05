@@ -85,12 +85,83 @@ class ConversationsService {
         let val: number[] = [];
         let ar: number[] = [];
 
+        const og_text = { ...message };
+
         if ( name === "vebAgent" ) {
-            val = [0, 0, 0]
-            ar = [0, 0, 0]
             readCsvFile('/home/ubuntu/Lexi2.0/output_csv.csv')
             .then((data) => {
-                console.log(data);
+                for (const row of data) {
+                    const valence = row.valence
+                    const arousal = row.arousal
+
+                    val = [valence, 0, 0]
+                    ar = [arousal, 0, 0]
+
+                    const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
+                    const beforeUserMessage = { role: 'system', content: "" };
+                    const afterUserMessage = { role: 'system', content: "" };
+
+                    message["content"] = "The valence of the image is "+valence.toString()+" and the arousal value is "+arousal.toString()+" classify it in one of the six categories: Happy, Angry, Sad, Neutral, Surprise and Ahegao. Only reply single word, which would be the category"
+
+                    const messages = [
+                        systemPrompt,
+                        ...conversation,
+                        beforeUserMessage,
+                        message,
+                        afterUserMessage,
+                        { role: 'assistant', content: '' },
+                    ];
+
+                    og_text["Content"] = "Filename: "+row.filename+", Category: "+row.category
+                    const chatRequest = this.getChatRequest(agent, messages);
+                    this.createMessageDoc(og_text, conversationId, conversation.length + 1, val, ar);
+
+                    let assistantMessage = '';
+                    
+                    if (!streamResponse) {
+                        const response = openai.chat.completions.create(chatRequest);
+                        assistantMessage = response.choices[0].message.content?.trim();
+                    }
+
+                    const savedMessage = this.createMessageDoc(
+                        {
+                            content: assistantMessage,
+                            role: 'assistant',
+                        },
+                        conversationId,
+                        conversation.length + 2,
+                        val,
+                        ar,
+                    );
+
+                    this.updateConversationMetadata(conversationId, {
+                        $inc: { messagesNumber: 1 },
+                        $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
+                    });
+
+                    const Exmessages: any[] = this.getExplainableText(agent, conversation, og_text, val, ar, "mean", "mean", explainabilityPrompt);
+                    const ExchatRequest = this.getChatRequest(agent, Exmessages);
+
+                    let ExassistantMessage = '';        
+
+                    if (true) {
+                        const response = openai.chat.completions.create(ExchatRequest);
+                        ExassistantMessage = response.choices[0].message.content?.trim();
+                    } 
+                    this.createExplainableDoc(
+                        og_text,
+                        message,
+                        {
+                            content: ExassistantMessage,
+                            role: 'assistant',
+                        },
+                        conversationId,
+                        conversation.length + 2,
+                        val,
+                        ar,
+                    );
+
+                }
             })
             .catch((error) => {
                 console.error('Error reading CSV file:', error);
@@ -98,7 +169,7 @@ class ConversationsService {
 
             const savedMessage = await this.createMessageDoc(
                 {
-                    content: "The data should be logged",
+                    content: "The data should be processed by now",
                     role: 'assistant',
                 },
                 conversationId,
@@ -125,7 +196,7 @@ class ConversationsService {
         //console.log(current_state[0]["arousal"])
         //console.log(val_max, ar_min)
         
-        const og_text = { ...message };
+        
         //console.log(og_text)
         const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr, vai, valOption, arOption);
         const chatRequest = this.getChatRequest(agent, messages);
@@ -403,7 +474,7 @@ class ConversationsService {
             const final_message = v_text + a_text + " while user replies to you " + message["content"] + " (Do not share the Valence Arousal values with user.)"
             message["content"] = final_message
         }
-	//message["content"] = agent.beforeUserSentencePrompt + " " + message["content"] + " " + agent.afterUserSentencePrompt
+	    //message["content"] = agent.beforeUserSentencePrompt + " " + message["content"] + " " + agent.afterUserSentencePrompt
         console.log(message)
         const messages = [
             systemPrompt,
