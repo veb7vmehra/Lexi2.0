@@ -88,85 +88,81 @@ class ConversationsService {
         const og_text = { ...message };
 
         if ( name === "vebAgent" ) {
-            readCsvFile('/home/ubuntu/Lexi2.0/output_csv.csv')
-            .then((data) => {
-                for (const row of data) {
-                    const valence = row.valence
-                    const arousal = row.arousal
+            const data = await readCsvFile('/home/ubuntu/Lexi2.0/output_csv.csv');
+            for (const row of data) {
+                const valence = row.valence
+                const arousal = row.arousal
+                console.log(valence, arousal)
 
-                    val = [valence, 0, 0]
-                    ar = [arousal, 0, 0]
+                val = [valence, 0, 0]
+                ar = [arousal, 0, 0]
 
-                    const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
-                    const beforeUserMessage = { role: 'system', content: "" };
-                    const afterUserMessage = { role: 'system', content: "" };
+                const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
+                const beforeUserMessage = { role: 'system', content: "" };
+                const afterUserMessage = { role: 'system', content: "" };
 
-                    message["content"] = "The valence of the image is "+valence.toString()+" and the arousal value is "+arousal.toString()+" classify it in one of the six categories: Happy, Angry, Sad, Neutral, Surprise and Ahegao. Only reply single word, which would be the category"
+                message["content"] = "The valence of the image is "+valence.toString()+" and the arousal value is "+arousal.toString()+" classify it in one of the six categories: Happy, Angry, Sad, Neutral, Surprise and Ahegao. Only reply single word, which would be the category"
 
-                    const messages = [
-                        systemPrompt,
-                        ...conversation,
-                        beforeUserMessage,
-                        message,
-                        afterUserMessage,
-                        { role: 'assistant', content: '' },
-                    ];
+                const messages = [
+                    systemPrompt,
+                    ...conversation,
+                    beforeUserMessage,
+                    message,
+                    afterUserMessage,
+                    { role: 'assistant', content: '' },
+                ];
 
-                    og_text["Content"] = "Filename: "+row.filename+", Category: "+row.category
-                    const chatRequest = this.getChatRequest(agent, messages);
-                    this.createMessageDoc(og_text, conversationId, conversation.length + 1, val, ar);
+                og_text["Content"] = "Filename: "+row.filename+", Category: "+row.category
+                const chatRequest = this.getChatRequest(agent, messages);
+                await this.createMessageDoc(og_text, conversationId, conversation.length + 1, val, ar);
 
-                    let assistantMessage = '';
-                    
-                    if (!streamResponse) {
-                        const response = openai.chat.completions.create(chatRequest);
-                        assistantMessage = response.choices[0].message.content?.trim();
-                    }
-
-                    const savedMessage = this.createMessageDoc(
-                        {
-                            content: assistantMessage,
-                            role: 'assistant',
-                        },
-                        conversationId,
-                        conversation.length + 2,
-                        val,
-                        ar,
-                    );
-
-                    this.updateConversationMetadata(conversationId, {
-                        $inc: { messagesNumber: 1 },
-                        $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
-                    });
-
-                    const Exmessages: any[] = this.getExplainableText(agent, conversation, og_text, val, ar, "mean", "mean", explainabilityPrompt);
-                    const ExchatRequest = this.getChatRequest(agent, Exmessages);
-
-                    let ExassistantMessage = '';        
-
-                    if (true) {
-                        const response = openai.chat.completions.create(ExchatRequest);
-                        ExassistantMessage = response.choices[0].message.content?.trim();
-                    } 
-                    this.createExplainableDoc(
-                        og_text,
-                        message,
-                        {
-                            content: ExassistantMessage,
-                            role: 'assistant',
-                        },
-                        conversationId,
-                        conversation.length + 2,
-                        val,
-                        ar,
-                    );
-
+                let assistantMessage = '';
+                
+                if (!streamResponse) {
+                    const response = await openai.chat.completions.create(chatRequest);
+                    assistantMessage = response.choices[0].message.content?.trim();
                 }
-            })
-            .catch((error) => {
-                console.error('Error reading CSV file:', error);
-            });
 
+                const savedMessage = await this.createMessageDoc(
+                    {
+                        content: assistantMessage,
+                        role: 'assistant',
+                    },
+                    conversationId,
+                    conversation.length + 2,
+                    val,
+                    ar,
+                );
+
+                this.updateConversationMetadata(conversationId, {
+                    $inc: { messagesNumber: 1 },
+                    $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
+                });
+
+                const Exmessages: any[] = this.getExplainableText(agent, conversation, og_text, val, ar, "mean", "mean", explainabilityPrompt);
+                const ExchatRequest = this.getChatRequest(agent, Exmessages);
+
+                let ExassistantMessage = '';        
+
+                if (true) {
+                    const response = await openai.chat.completions.create(ExchatRequest);
+                    ExassistantMessage = response.choices[0].message.content?.trim();
+                } 
+                await this.createExplainableDoc(
+                    og_text,
+                    message,
+                    {
+                        content: ExassistantMessage,
+                        role: 'assistant',
+                    },
+                    conversationId,
+                    conversation.length + 2,
+                    val,
+                    ar,
+                );
+
+            }
+            
             const savedMessage = await this.createMessageDoc(
                 {
                     content: "The data should be processed by now",
