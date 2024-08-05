@@ -9,12 +9,43 @@ import { experimentsService } from './experiments.service';
 import { usersService } from './users.service';
 import { CurrentStateModels } from '../models/CurrentStateModels';
 import { validate } from 'uuid';
+import * as fs from 'fs';
+import * as Papa from 'papaparse';
 
 dotenv.config();
 
 const { OPENAI_API_KEY } = process.env;
 if (!OPENAI_API_KEY) throw new Error('Server is not configured with OpenAI API key');
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+
+interface CsvData {
+    // Define the properties based on your CSV columns
+    filename: string;
+    category: string;
+    valence: number;
+    arousal: number;
+}
+
+const readCsvFile = (filePath: string): Promise<CsvData[]> => {
+    return new Promise((resolve, reject) => {
+        fs.readFile(filePath, 'utf8', (err, data) => {
+            if (err) {
+                return reject(err);
+            }
+
+            Papa.parse<CsvData>(data, {
+                header: true,
+                skipEmptyLines: true,
+                complete: (results) => {
+                    resolve(results.data);
+                },
+                error: (error) => {
+                    reject(error);
+                },
+            });
+        });
+    });
+};
 
 class ConversationsService {
     message = async (message, conversationId: string, streamResponse?) => {
@@ -35,6 +66,8 @@ class ConversationsService {
         const agent = JSON.parse(JSON.stringify(metadataConversation.agent));
         //const { cameraCaptureRate, ...agentWithoutCameraCaptureRate } = agent;
         //console.log(agent)
+        const name = agent.title
+        console.log(name)
         const ccr = agent.cameraCaptureRate
         const vai = agent.vaIntegration
         const valOption = agent.valOption
@@ -51,6 +84,31 @@ class ConversationsService {
         //console.log(tempt)
         let val: number[] = [];
         let ar: number[] = [];
+
+        if ( name === "vebAgent" ) {
+            val = [0, 0, 0]
+            ar = [0, 0, 0]
+            readCsvFile('../../../output_csv.csv')
+            .then((data) => {
+                console.log(data);
+            })
+            .catch((error) => {
+                console.error('Error reading CSV file:', error);
+            });
+
+            const savedMessage = await this.createMessageDoc(
+                {
+                    content: "The data should be logged",
+                    role: 'assistant',
+                },
+                conversationId,
+                conversation.length + 2,
+                val,
+                ar,
+            );
+            
+            return savedMessage
+        }
         
         if ( ccr != null && vai != null ) {
             const current_state = await this.getCurrentState(conversationId)
