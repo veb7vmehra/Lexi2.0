@@ -147,7 +147,7 @@ class DataAggregationService {
             for (const user of users.data) {
                 const { agent, ...userWithoutAgent } = user;
                 //console.log(agent)
-                const conversations = await conversationsService.getUserConversations(user._id, agent.cameraCaptureRate, agent.vaIntegration);
+                const conversations = await conversationsService.getUserConversations(user._id, agent.cameraCaptureRate, agent.vaIntegration, agent.title );
                 //console.log(conversations[0])
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 data.push({

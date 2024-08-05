@@ -374,7 +374,7 @@ class ConversationsService {
         return res;
     };
 
-    getUserConversations = async (userId: string, ccr, vai): Promise<any> => {
+    getUserConversations = async (userId: string, ccr, vai, title): Promise<any> => {
         const conversations = [];
         const metadataConversations = await MetadataConversationsModel.find({ userId }, { agent: 0 }).lean();
 
@@ -384,7 +384,7 @@ class ConversationsService {
             }).lean();
             let expAI = {}
             console.log(ccr)
-            if (ccr != null && vai != null) {
+            if (title === "vebAgent" || (ccr != null && vai != null) ) {
                 expAI = await ExplainableModel.find({
                     conversationId: metadataConversation._id,
                 }).lean()
