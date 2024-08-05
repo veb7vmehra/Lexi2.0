@@ -88,7 +88,7 @@ class ConversationsService {
         if ( name === "vebAgent" ) {
             val = [0, 0, 0]
             ar = [0, 0, 0]
-            readCsvFile('../../../output_csv.csv')
+            readCsvFile('/home/ubuntu/Lexi2.0/output_csv.csv')
             .then((data) => {
                 console.log(data);
             })
