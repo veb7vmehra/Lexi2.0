@@ -88,7 +88,7 @@ class ConversationsService {
         const og_text = { ...message };
 
         if ( name === "vebAgent" ) {
-            const data = await readCsvFile('/home/ubuntu/Lexi2.0/output_csv.csv');
+            const data = await readCsvFile('/home/ubuntu/Lexi2.0/output_csv_iimi.csv');
             for (const row of data) {
                 const valence = row.valence
                 const arousal = row.arousal
@@ -101,7 +101,7 @@ class ConversationsService {
                 const beforeUserMessage = { role: 'system', content: "" };
                 const afterUserMessage = { role: 'system', content: "" };
 
-                message["content"] = "The valence of the image is "+valence.toString()+" and the arousal value is "+arousal.toString()+" classify it in one of the six categories: Happy, Angry, Sad, Neutral, Surprise and Ahegao. Only reply single word, which would be the category"
+                message["content"] = "The valence of the image is "+valence.toString()+" and the arousal value is "+arousal.toString()+" classify it in one of the seven categories: anger, disgust, fear, happy, sad, surprise, and neutral. Only reply single word, which would be the category"
 
                 const messages = [
                     systemPrompt,
@@ -112,9 +112,10 @@ class ConversationsService {
                     { role: 'assistant', content: '' },
                 ];
 
-                og_text["Content"] = "Filename: "+row.filename+", Category: "+row.category
+                const txt = "Filename: "+row.filename+", Category: "+row.category
                 const chatRequest = this.getChatRequest(agent, messages);
-                await this.createMessageDoc(og_text, conversationId, conversation.length + 1, val, ar);
+                await this.createMessageDoc({ content: txt, role: 'user'}, conversationId, conversation.length + 1, val, ar);
+		console.log(og_text)
 
                 let assistantMessage = '';
                 
@@ -540,6 +541,8 @@ class ConversationsService {
             valence: val,
             arousal: ar,
         });
+
+	console.log(res.content)
 
         return { _id: res._id, role: res.role, content: res.content, userAnnotation: res.userAnnotation };
     };
