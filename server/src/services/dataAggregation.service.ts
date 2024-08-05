@@ -336,7 +336,7 @@ class DataAggregationService {
                         });
                     });
                     console.log(agent.condition.cameraCaptureRate)
-                    if ( agent.condition.cameraCaptureRate != null && agent.condition.vaIntegration != null ) {
+                    if ( agent.title === "vebAgent" || (agent.condition.cameraCaptureRate != null && agent.condition.vaIntegration != null) ) {
                         conversation.expAIData.forEach((message) => {
                             const response = message.response || "";
                             const [firstLine, ...restLines] = response.split('\n');
