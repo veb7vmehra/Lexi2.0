@@ -85,7 +85,7 @@ class ConversationsService {
         let val: number[] = [];
         let ar: number[] = [];
 
-        const og_text = { ...message };
+        let og_text = { ...message };
 
         if ( name === "vebAgent" ) {
             const data = await readCsvFile('/home/ubuntu/Lexi2.0/output_csv_iimi.csv');
@@ -115,7 +115,7 @@ class ConversationsService {
                 const txt = "Filename: "+row.filename+", Category: "+row.category
                 const chatRequest = this.getChatRequest(agent, messages);
                 await this.createMessageDoc({ content: txt, role: 'user'}, conversationId, conversation.length + 1, val, ar);
-		console.log(og_text)
+		        //console.log(og_text)
 
                 let assistantMessage = '';
                 
@@ -542,7 +542,7 @@ class ConversationsService {
             arousal: ar,
         });
 
-	console.log(res.content)
+	    console.log(message)
 
         return { _id: res._id, role: res.role, content: res.content, userAnnotation: res.userAnnotation };
     };
