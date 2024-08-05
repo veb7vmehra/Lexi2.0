@@ -140,7 +140,7 @@ class ConversationsService {
                     $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
                 });
 
-                const Exmessages: any[] = this.getExplainableText(agent, conversation, og_text, val, ar, "mean", "mean", explainabilityPrompt);
+                const Exmessages: any[] = this.getExplainableText(agent, conversation, { content: txt, role: 'user'}, val, ar, "mean", "mean", explainabilityPrompt);
                 const ExchatRequest = this.getChatRequest(agent, Exmessages);
 
                 let ExassistantMessage = '';        
