@@ -20,10 +20,11 @@ const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
 interface CsvData {
     // Define the properties based on your CSV columns
-    filename: string;
-    category: string;
-    valence: number;
-    arousal: number;
+    Filename: string;
+    Category: object;
+    Valence: number;
+    Arousal: number;
+    Dominance: number;
 }
 
 const readCsvFile = (filePath: string): Promise<CsvData[]> => {
@@ -88,20 +89,22 @@ class ConversationsService {
         let og_text = { ...message };
 
         if ( name === "vebAgent" ) {
-            const data = await readCsvFile('/home/ubuntu/Lexi2.0/output_csv_iimi.csv');
+            const data = await readCsvFile('/home/ubuntu/Lexi2.0/emotic_4k.csv');
             for (const row of data) {
-                const valence = row.valence
-                const arousal = row.arousal
-                console.log(valence, arousal)
+                const valence = row.Valence
+                const arousal = row.Arousal
+		const dominance = row.Dominance
+
+                console.log(valence, arousal, dominance)
 
                 val = [valence, 0, 0]
-                ar = [arousal, 0, 0]
+                ar = [arousal, dominance, 0]
 
                 const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
                 const beforeUserMessage = { role: 'system', content: "" };
                 const afterUserMessage = { role: 'system', content: "" };
 
-                message["content"] = "The valence of the image is "+valence.toString()+" and the arousal value is "+arousal.toString()+" classify it in one of the seven categories: anger, disgust, fear, happy, sad, surprise, and neutral. Only reply single word, which would be the category"
+                message["content"] = "The value of valence is "+valence.toString()+", the arousal value is "+arousal.toString()+" and the value of dominance is "+dominance.toString()+". Describe these values (without mentioning the values) as sentences taking inspiration from the provided description of categories, use the description of the categories in your sentance instead of using the category itself."
 
                 const messages = [
                     systemPrompt,
@@ -112,7 +115,7 @@ class ConversationsService {
                     { role: 'assistant', content: '' },
                 ];
 
-                const txt = "Filename: "+row.filename+", Category: "+row.category
+                const txt = "Filename: "+row.Filename+", Category: "+row.Category
                 const chatRequest = this.getChatRequest(agent, messages);
                 await this.createMessageDoc({ content: txt, role: 'user'}, conversationId, conversation.length + 1, val, ar);
 		        //console.log(og_text)
@@ -150,7 +153,7 @@ class ConversationsService {
                     ExassistantMessage = response.choices[0].message.content?.trim();
                 } 
                 await this.createExplainableDoc(
-                    og_text,
+		    {content: txt, role:'user'},
                     message,
                     {
                         content: ExassistantMessage,
@@ -511,7 +514,8 @@ class ConversationsService {
         } else if (arOption === "all") {
             v_text = " and the average arousal of the user is "+ ar[0].toString() + "while the range of arousal is from "+ ar[2].toString() + " to " + ar[1].toString()
         }
-        const final_message = v_text + a_text + ". " + explainabilityPrompt
+        const final_message = "The value of valence is "+val[0].toString()+", the value of arousal is "+ar[0].toString()+" and the value of dominance is "+ar[1].toString()+". The values of Valence, Arousal and Dominance goes from -5 to 5. Your job is to understand the expression and emotion through these values and find the most fitting 5categories out  of the following: Peace, Affection, Esteem, Anticipation, Engagement, Confidence, Happiness, Pleasure, Excitement, Surprise, Sympathy, Doubt/Confusion, Disconnection, Fatigue, Embarrassment, Yearning, Disapproval, Aversion, Annoyance, Anger, Sensitivity, Sadness, Disquietment, Fear, Pain and Suffering. The output should only be space seprated names of five categories and nothing else."
+	//v_text + a_text + ". " + explainabilityPrompt
         message["content"] = final_message
         console.log(message)
         const messages: any = [
