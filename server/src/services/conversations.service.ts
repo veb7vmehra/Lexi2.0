@@ -290,17 +290,21 @@ class ConversationsService {
             //console.log("Vaibhav here too")
             agent = await experimentsService.getActiveAgent(experimentId);
         }
+	agent = await experimentsService.getActiveAgent(experimentId);
         //console.log("Are you working here?")
         //console.log("Vaibhav here", agent)
-        console.log(user)
-        console.log(user.agent)
+        //console.log("HELLO THERE")
+        //console.log(user.agent)
+	//console.log("HELLO 2")
+	//console.log(agent)
         const res = await MetadataConversationsModel.create({
             conversationNumber: userConversationsNumber + 1,
             experimentId,
             userId,
-            agent: user.isAdmin ? agent : user.agent,
+            agent: agent,
             maxMessages: user.isAdmin ? undefined : experimentBoundries.maxMessages,
         });
+	//user.isAdmin ? agent : user.agent
         //console.log("Why aren't you working here?")
         const firstMessage: Message = {
             role: 'assistant',
