@@ -292,6 +292,8 @@ class ConversationsService {
         }
         //console.log("Are you working here?")
         //console.log("Vaibhav here", agent)
+        console.log(user)
+        console.log(user.agent)
         const res = await MetadataConversationsModel.create({
             conversationNumber: userConversationsNumber + 1,
             experimentId,
