@@ -299,7 +299,7 @@ class ConversationsService {
             //console.log("Vaibhav here too")
             agent = await experimentsService.getActiveAgent(experimentId);
         }
-	agent = await experimentsService.getActiveAgent(experimentId);
+	//agent = await experimentsService.getActiveAgent(experimentId);
         //console.log("Are you working here?")
         //console.log("Vaibhav here", agent)
         //console.log("HELLO THERE")
@@ -310,10 +310,10 @@ class ConversationsService {
             conversationNumber: userConversationsNumber + 1,
             experimentId,
             userId,
-            agent: agent,
+            agent: user.isAdmin ? agent : user.agent,
             maxMessages: user.isAdmin ? undefined : experimentBoundries.maxMessages,
         });
-	//user.isAdmin ? agent : user.agent
+
         //console.log("Why aren't you working here?")
         const firstMessage: Message = {
             role: 'assistant',
