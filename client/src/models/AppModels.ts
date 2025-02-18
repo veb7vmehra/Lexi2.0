@@ -65,6 +65,7 @@ export interface AgentType {
     frequencyPenalty: number;
     presencePenalty: number;
     cameraCaptureRate: number;
+    audioInput: number;
     vaIntegration: number;
     stopSequences: { value: string; id: string }[];
     createdAt?: Date;

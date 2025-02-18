@@ -54,6 +54,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                   frequencyPenaltyEnabled: editAgent.frequencyPenalty !== null,
                   presencePenaltyEnabled: editAgent.presencePenalty !== null,
                   cameraCaptureRate: editAgent.cameraCaptureRate !== null,
+                  audioInput: editAgent.audioInput !== null,
                   vaIntegration: editAgent.vaIntegration !== null,
               }
             : initialSlidersEnabled,
@@ -357,6 +358,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                     </Button>
                 </Box>
             )}
+            {renderCheckbox('audioInput', 'audioInput', slidersEnabled.audioInputEnabled)}
             {renderCheckbox('vaIntegration', 'vaIntegration', slidersEnabled.vaIntegrationEnabled)}
             <ChipsInput
                 list={agent.stopSequences}
