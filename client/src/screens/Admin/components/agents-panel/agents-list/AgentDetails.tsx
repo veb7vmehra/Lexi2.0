@@ -87,6 +87,12 @@ export const AgentDetails = ({ agent }) => (
                 </ListItem>
                 <ListItem>
                     <ListItemText
+                        primary="Audio Input"
+                        secondary={agent.audioInput !== null ? agent.audioInput : 'Not Active'}
+                    />
+                </ListItem>
+                <ListItem>
+                    <ListItemText
                         primary="Valence-Arousal Integration"
                         secondary={agent.vaIntegration !== null ? agent.vaIntegration : 'Not Active'}
                     />
