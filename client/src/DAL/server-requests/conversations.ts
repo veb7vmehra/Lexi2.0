@@ -14,6 +14,12 @@ export const sendMessage = async (message: MessageType, conversationId: string):
             message,
             conversationId,
         });
+        //console.log(response)
+        if(response.data.content && response.data.timeDelay != null) {
+            const num_word = response.data.content.trim().split(/\s+/).length;
+            console.log(num_word)
+            await new Promise(resolve => setTimeout(resolve, (num_word / response.data.timeDelay) * 1000));
+        }
         return response.data;
     } catch (error) {
         throw error;
@@ -91,6 +97,7 @@ export const getConversation = async (conversationId: string): Promise<MessageTy
             `/${ApiPaths.CONVERSATIONS_PATH}/conversation?conversationId=${conversationId}`,
         );
         //console.log(response["conversationMetaData"])
+        
         return response.data;
     } catch (error) {
         throw error;

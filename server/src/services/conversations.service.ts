@@ -37,6 +37,8 @@ class ConversationsService {
         //console.log(agent)
         const ccr = agent.cameraCaptureRate
         const vai = agent.vaIntegration
+        const timeDelay = agent.inverseTimeDelay
+        
         //console.log("vai", vai)
         //console.log("ccr", ccr)
         delete agent.cameraCaptureRate;
@@ -62,10 +64,12 @@ class ConversationsService {
 
         let assistantMessage = '';
         let streamExplainable = streamResponse;
-
         if (!streamResponse) {
             const response = await openai.chat.completions.create(chatRequest);
             assistantMessage = response.choices[0].message.content?.trim();
+            //const num_word = assistantMessage.trim().split(/\s+/).length;
+            //console.log(num_word)
+            //await new Promise(resolve => setTimeout(resolve, (num_word) * 1000));
         } else {
             const responseStream = await openai.chat.completions.create({ ...chatRequest, stream: true });
             for await (const partialResponse of responseStream) {
@@ -73,12 +77,16 @@ class ConversationsService {
                 await streamResponse(assistantMessagePart);
                 assistantMessage += assistantMessagePart;
             }
+            //const num_word = assistantMessage.trim().split(/\s+/).length;
+            //console.log(num_word)
+            //await new Promise(resolve => setTimeout(resolve, (num_word) * 1000));
         }
-
+        //console.log("before create message", timeDelay)
         const savedMessage = await this.createMessageDoc(
             {
                 content: assistantMessage,
                 role: 'assistant',
+                timeDelay: timeDelay
             },
             conversationId,
             conversation.length + 2,
@@ -116,6 +124,7 @@ class ConversationsService {
                 {
                     content: ExassistantMessage,
                     role: 'assistant',
+                    timeDelay: timeDelay
                 },
                 conversationId,
                 conversation.length + 2,
@@ -123,7 +132,7 @@ class ConversationsService {
                 ar,
             );
         }
-
+        //console.log(savedMessage)
         return savedMessage;
     };
 
@@ -161,6 +170,7 @@ class ConversationsService {
         const firstMessage: Message = {
             role: 'assistant',
             content: user.isAdmin ? agent.firstChatSentence : user.agent.firstChatSentence,
+            timeDelay: null
         };
         console.log(firstMessage)
         await Promise.all([
@@ -174,8 +184,8 @@ class ConversationsService {
 
     getConversation = async (conversationId: string, isLean = false): Promise<Message[]> => {
         const returnValues = isLean
-            ? { _id: 0, role: 1, content: 1 }
-            : { _id: 1, role: 1, content: 1, userAnnotation: 1 };
+            ? { _id: 0, role: 1, content: 1, timeDelay: 1}
+            : { _id: 1, role: 1, content: 1, timeDelay: 1, userAnnotation: 1 };
 
         const conversation = await ConversationsModel.find({ conversationId }, returnValues);
 
@@ -277,6 +287,7 @@ class ConversationsService {
         const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
         const beforeUserMessage = { role: 'system', content: agent.beforeUserSentencePrompt };
         const afterUserMessage = { role: 'system', content: agent.afterUserSentencePrompt };
+        const inverseTimeDelay = { role: 'system', content: agent.inverseTimeDelay };
         if ( ccr != null && vai != null ) {
             const final_message = "The valence of the user is "+ val + " and the arousal is "+ ar + "while user replies to you " + message["content"]
             message["content"] = final_message
@@ -288,14 +299,14 @@ class ConversationsService {
             beforeUserMessage,
             message,
             afterUserMessage,
-            { role: 'assistant', content: '' },
+            { role: 'assistant', content: '', timeDelay: inverseTimeDelay },
         ];
 
         return messages;
     };
 
     private getExplainableText = (settings: any, conversation: any[], message: any, val: number, ar: number) => {
-        const systemPrompt: Message = { role: 'system', content: "" };
+        const systemPrompt: Message = { role: 'system', content: "", timeDelay: null };
         const beforeUserMessage = { role: 'system', content: "" };
         const afterUserMessage = { role: 'system', content: "" };
         //console.log(message)
@@ -321,6 +332,7 @@ class ConversationsService {
         val: number,
         ar: number,
     ): Promise<Message> => {
+        
         const res = await ConversationsModel.create({
             content: message.content,
             role: message.role,
@@ -328,9 +340,10 @@ class ConversationsService {
             messageNumber,
             valence: val,
             arousal: ar,
+            timeDelay: message.timeDelay,
         });
-
-        return { _id: res._id, role: res.role, content: res.content, userAnnotation: res.userAnnotation };
+        //console.log("resTimeDelay", res.timeDelay)
+        return { _id: res._id, role: res.role, content: res.content, userAnnotation: res.userAnnotation, timeDelay: res.timeDelay };
     };
 
     private createExplainableDoc = async (og_text: Message, message: Message, resp: Message, conversationId: string, messageNumber: number, val:number, ar:number) => {
