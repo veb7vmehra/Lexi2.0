@@ -17,6 +17,7 @@ import { UserAnnotation } from '../../models/AppModels';
 import { MainContainer, MessageListContainer, SectionContainer, SectionInnerContainer } from './ChatPage.s';
 import MessageList from './components/MessageList';
 import InputBox from './components/input-box/InputBox';
+import InputBox_mic from './components/input-box/InputBox_mic';
 import { SidebarChat } from './components/side-bar-chat/SideBarChat';
 import React from "react";
 import ReactWebcam from "react-webcam";
@@ -47,6 +48,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
     const conversationId = useConversationId();
     const experimentId = useExperimentId();
     const [cameraAccess, setCameraAccess] = useState(false);
+    const [audioAccess, setAudioAccess] = useState(false);
     const webcamRef = useRef(null);
 
     useEffect(() => {
@@ -78,8 +80,12 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
               }
             setIsPageLoading(false);
             let cameraAccess = false;
+            let audioAccess = false;
             if (conversation["conversationMetaData"]["agent"]["cameraCaptureRate"] != null) {
                 setCameraAccess(true);
+            }
+            if (conversation["conversationMetaData"]["agent"]["audioInput"] != null) {
+                setAudioAccess(true);
             }
         } catch (err) {
             openSnackbar('Failed to load conversation', SnackbarStatus.ERROR);
@@ -171,15 +177,27 @@ const ChatPage: React.FC<ChatPageProps> = ({ isFinishDialogOpen, setIsFinishDial
                             />
                         </MessageListContainer>
                         <Grid item display={'flex'} justifyContent={'center'}>
-                            <InputBox
-                                isMobile={isMobile}
-                                messages={messages}
-                                setMessages={setMessages}
-                                conversationId={conversationId}
-                                setIsMessageLoading={setIsMessageLoading}
-                                fontSize={messageFontSize}
-                                isStreamMessage={experimentFeatures?.streamMessage}
-                            />
+                            {audioAccess ? (
+                                <InputBox_mic
+                                    isMobile={isMobile}
+                                    messages={messages}
+                                    setMessages={setMessages}
+                                    conversationId={conversationId}
+                                    setIsMessageLoading={setIsMessageLoading}
+                                    fontSize={messageFontSize}
+                                    isStreamMessage={experimentFeatures?.streamMessage}
+                                />
+                            ) : (
+                                <InputBox
+                                    isMobile={isMobile}
+                                    messages={messages}
+                                    setMessages={setMessages}
+                                    conversationId={conversationId}
+                                    setIsMessageLoading={setIsMessageLoading}
+                                    fontSize={messageFontSize}
+                                    isStreamMessage={experimentFeatures?.streamMessage}
+                                />
+                            )}
                         </Grid>
                     </SectionInnerContainer>
                 </SectionContainer>

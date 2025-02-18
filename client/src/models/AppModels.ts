@@ -67,6 +67,7 @@ export interface AgentType {
     valOption: string;
     arOption:string;
     explainabilityPrompt: string;
+    audioInput: number;
     vaIntegration: number;
     stopSequences: { value: string; id: string }[];
     createdAt?: Date;

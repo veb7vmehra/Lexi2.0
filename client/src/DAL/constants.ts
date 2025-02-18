@@ -7,6 +7,7 @@ export const defaultSliderSettings = {
     frequencyPenalty: 0,
     presencePenalty: 0,
     cameraCaptureRate: 5,
+    audioInput: 1,
     vaIntegration: 1,
 } as const;
 
@@ -30,6 +31,7 @@ export const defaultSettings: AgentType = {
     frequencyPenalty: null,
     presencePenalty: null,
     cameraCaptureRate: null,
+    audioInput: null,
     vaIntegration: null,
     valOption: valOptions[0],
     arOption: arOptions[0],
@@ -77,6 +79,7 @@ export const initialSlidersEnabled = {
     frequencyPenaltyEnabled: false,
     presencePenaltyEnabled: false,
     cameraCaptureRateEnabled: false,
+    audioInputEnabled: false,
     vaIntegrationEnabled: false,
 } as const;
 

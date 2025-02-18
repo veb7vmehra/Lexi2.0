@@ -24,6 +24,7 @@ const agentsSheetCol = [
     { header: 'Frequency Penalty', key: 'frequencyPenalty' },
     { header: 'Presence Penalty', key: 'presencePenalty' },
     { header: 'Camera Capture Rate', key: 'cameraCaptureRate'},
+    { header: 'Audio Input', key: 'audioInput'},
     { header: 'Valence-Arousal Integration', key: 'vaIntegration'},
     { header: 'Stop Sequences', key: 'stopSequences' },
 ];
@@ -248,6 +249,7 @@ class DataAggregationService {
                 frequencyPenalty: agent.condition.frequencyPenalty,
                 presencePenalty: agent.condition.presencePenalty,
                 cameraCaptureRate: agent.condition.cameraCaptureRate,
+                audioInput: agent.condition.audioInput,
                 vaIntegration: agent.condition.vaIntegration,
                 stopSequences: agent.condition.stopSequences,
             });
