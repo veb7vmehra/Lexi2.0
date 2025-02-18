@@ -13,6 +13,7 @@ export interface IConversation {
     userAnnotation: UserAnnotation;
     valence: number;
     arousal: number;
+    timeDelay: number;
 }
 
 export interface IExplainable {
@@ -33,6 +34,7 @@ export interface Message {
     _id?: mongoose.Types.ObjectId;
     role: 'system' | 'user' | 'assistant';
     content: string;
+    timeDelay: number;
     userAnnotation?: UserAnnotation;
 }
 
