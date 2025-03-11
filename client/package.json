@@ -23,6 +23,7 @@
     "react-webcam": "^7.2.0",
     "redux": "^4.2.1",
     "redux-thunk": "^2.4.2",
+    "wavesurfer.js": "^7.9.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

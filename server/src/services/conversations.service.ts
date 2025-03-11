@@ -1,16 +1,20 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { OpenAI } from 'openai';
-import { IAgent, Message, UserAnnotation } from 'src/types';
+import fs from "fs";
+import FormData from 'form-data';
+import { IAgent, Message, UserAnnotation, Audio } from 'src/types';
 import { ConversationsModel } from '../models/ConversationsModel';
 import { ExplainableModel } from '../models/ExplainableModel';
 import { MetadataConversationsModel } from '../models/MetadataConversationsModel';
 import { experimentsService } from './experiments.service';
 import { usersService } from './users.service';
 import { CurrentStateModels } from '../models/CurrentStateModels';
-import { validate } from 'uuid';
+//import { validate } from 'uuid';
 import * as fs from 'fs';
 import * as Papa from 'papaparse';
+//import { Readable } from "stream";
+import fetch from "node-fetch";
 
 dotenv.config();
 
@@ -85,110 +89,6 @@ class ConversationsService {
         //console.log(tempt)
         let val: number[] = [];
         let ar: number[] = [];
-
-        let og_text = { ...message };
-
-
-        if ( name === "vebAgent" ) {
-            const data = await readCsvFile('/home/ubuntu/Lexi2.0/emotic_test_fc.csv');
-	    let veb_count = 0
-            for (const row of data) {
-		veb_count += 1
-		console.log(veb_count)
-                const valence = row.Valence
-                const arousal = row.Arousal
-		//const dominance = row.Dominance
-
-                console.log(valence, arousal)
-
-                val = [valence, 0, 0]
-                
-		console.log(row.Category)
-		const categoryArray = row.Category.split(',').map(c => c.trim());
-		const n_cat = categoryArray.length;
-		console.log(n_cat)
-		ar = [arousal, n_cat, 0]
-
-                const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
-                const beforeUserMessage = { role: 'system', content: "" };
-                const afterUserMessage = { role: 'system', content: "" };
-
-                message["content"] = "The value of valence is "+valence.toString()+", the arousal value is "+arousal.toString()+". What do you understand from these about the emotions expressed by the facial expressions. In only "+n_cat.toString()+" independent sentences, describe the expressed emotion and mental states in a psychological manner, without mentioning the valence and arousal values."
-
-                const messages = [
-                    systemPrompt,
-                    ...conversation,
-                    beforeUserMessage,
-                    message,
-                    afterUserMessage,
-                    { role: 'assistant', content: '' },
-                ];
-
-                const txt = "Filename: "+row.Filename+", Category: "+row.Category
-                const chatRequest = this.getChatRequest(agent, messages);
-                await this.createMessageDoc({ content: txt, role: 'user'}, conversationId, conversation.length + 1, val, ar);
-		        //console.log(og_text)
-
-                let assistantMessage = '';
-                
-                if (!streamResponse) {
-                    const response = await openai.chat.completions.create(chatRequest);
-                    assistantMessage = response.choices[0].message.content?.trim();
-                }
-
-                const savedMessage = await this.createMessageDoc(
-                    {
-                        content: assistantMessage,
-                        role: 'assistant',
-                    },
-                    conversationId,
-                    conversation.length + 2,
-                    val,
-                    ar,
-                );
-
-                this.updateConversationMetadata(conversationId, {
-                    $inc: { messagesNumber: 1 },
-                    $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
-                });
-
-                const Exmessages: any[] = this.getExplainableText(agent, conversation, { content: txt, role: 'user'}, val, ar, "mean", "mean", explainabilityPrompt);
-                const ExchatRequest = this.getChatRequest(agent, Exmessages);
-
-                let ExassistantMessage = '';        
-
-                if (true) {
-                    const response = await openai.chat.completions.create(ExchatRequest);
-                    ExassistantMessage = response.choices[0].message.content?.trim();
-                } 
-                await this.createExplainableDoc(
-		    {content: txt, role:'user'},
-                    message,
-                    {
-                        content: ExassistantMessage,
-                        role: 'assistant',
-                    },
-                    conversationId,
-                    conversation.length + 2,
-                    val,
-                    ar,
-                );
-
-            }
-            
-            const savedMessage = await this.createMessageDoc(
-                {
-                    content: "The data should be processed by now",
-                    role: 'assistant',
-                },
-                conversationId,
-                conversation.length + 2,
-                val,
-                ar,
-            );
-            
-            return savedMessage
-        }
         
         if ( ccr != null && vai != null ) {
             const current_state = await this.getCurrentState(conversationId)
@@ -201,11 +101,8 @@ class ConversationsService {
 
             await this.updateCurrentState(conversationId, 0, 0, 0);
         }
-        //console.log(current_state[0]["valence"])
-        //console.log(current_state[0]["arousal"])
-        //console.log(val_max, ar_min)
         
-        
+        const og_text = { ...message };
         //console.log(og_text)
         const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr, vai, valOption, arOption);
         const chatRequest = this.getChatRequest(agent, messages);
@@ -213,7 +110,6 @@ class ConversationsService {
 
         let assistantMessage = '';
         let streamExplainable = streamResponse;
-
         if (!streamResponse) {
             const response = await openai.chat.completions.create(chatRequest);
             assistantMessage = response.choices[0].message.content?.trim();
@@ -242,6 +138,9 @@ class ConversationsService {
             $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
         });
 
+        const audio_new = await this.transcribeText(assistantMessage);
+        console.log(audio_new)
+
         if ( ccr != null && vai != null ) {
             const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar, valOption, arOption, explainabilityPrompt);
             const ExchatRequest = this.getChatRequest(agent, Exmessages);
@@ -260,7 +159,7 @@ class ConversationsService {
                     ExassistantMessage += assistantMessagePart;
                 }
             }*/
-            console.log("idk why", og_text)
+            //console.log("idk why", og_text)
             await this.createExplainableDoc(
                 og_text,
                 message,
@@ -274,7 +173,137 @@ class ConversationsService {
                 ar,
             );
         }
+        
+        const newMessage = {
+            "_id": savedMessage._id, 
+            "role": savedMessage.role,
+            "content": audio_new, 
+            "userAnnotation": savedMessage.userAnnotation,
+            "timeDelay": savedMessage.timeDelay,
+        }
+        //console.log(newMessage)
+        return newMessage;
+    };
 
+    audio = async (message, conversationId: string, streamResponse?) => {
+        const [conversation, metadataConversation] = await Promise.all([
+            this.getConversation(conversationId, true),
+            this.getConversationMetadata(conversationId),
+        ]);
+
+        if (
+            metadataConversation.maxMessages &&
+            metadataConversation.messagesNumber + 1 > metadataConversation.maxMessages
+        ) {
+            const error = new Error('Message limit exceeded');
+            error['code'] = 403;
+            throw error;
+        }
+
+        const agent = JSON.parse(JSON.stringify(metadataConversation.agent));
+        const ccr = agent.cameraCaptureRate
+        const vai = agent.vaIntegration
+        const timeDelay = agent.inverseTimeDelay
+        
+        delete agent.cameraCaptureRate;
+        delete agent.vaIntegration;
+
+        const text = await this.transcribeAudio(message.content);
+
+        //console.log(typeof text);
+        message.content = text;
+
+        let val = 0;
+        let ar = 0
+        
+        if ( ccr != null && vai != null ) {
+            const current_state = await this.getCurrentState(conversationId)
+            val = current_state[0]["valence"] / current_state[0]["count"]
+            ar = current_state[0]["arousal"] / current_state[0]["count"]
+        }
+        //console.log(current_state[0]["valence"])
+        //console.log(current_state[0]["arousal"])
+        
+        const og_text = { ...message };
+        const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr, vai);
+        const chatRequest = this.getChatRequest(agent, messages);
+        
+        //NEED TO FIX THE LINE BELOW
+        await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar);
+
+        let assistantMessage = '';
+        if (!streamResponse) {
+            const response = await openai.chat.completions.create(chatRequest);
+            assistantMessage = response.choices[0].message.content?.trim();
+            //const num_word = assistantMessage.trim().split(/\s+/).length;
+            //console.log(num_word)
+            //await new Promise(resolve => setTimeout(resolve, (num_word) * 1000));
+        } else {
+            const responseStream = await openai.chat.completions.create({ ...chatRequest, stream: true });
+            for await (const partialResponse of responseStream) {
+                const assistantMessagePart = partialResponse.choices[0]?.delta?.content || '';
+                await streamResponse(assistantMessagePart);
+                assistantMessage += assistantMessagePart;
+            }
+            //const num_word = assistantMessage.trim().split(/\s+/).length;
+            //console.log(num_word)
+            //await new Promise(resolve => setTimeout(resolve, (num_word) * 1000));
+        }
+        //console.log("before create message", timeDelay)
+        const savedMessage = await this.createMessageDoc(
+            {
+                content: assistantMessage,
+                role: 'assistant',
+                timeDelay: timeDelay
+            },
+            conversationId,
+            conversation.length + 2,
+            val,
+            ar,
+        );
+
+        this.updateConversationMetadata(conversationId, {
+            $inc: { messagesNumber: 1 },
+            $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
+        });
+
+        const audio_new = await this.transcribeText(assistantMessage);
+        console.log(audio_new)
+
+        if ( ccr != null && vai != null ) {
+            const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar);
+            const ExchatRequest = this.getChatRequest(agent, Exmessages);
+
+            let ExassistantMessage = '';        
+
+            if (true) {
+                const response = await openai.chat.completions.create(ExchatRequest);
+                ExassistantMessage = response.choices[0].message.content?.trim();
+            } 
+            /*else {
+                const responseStream = await openai.chat.completions.create({ ...ExchatRequest, stream: true });
+                for await (const partialResponse of responseStream) {
+                    const assistantMessagePart = partialResponse.choices[0]?.delta?.content || '';
+                    await streamResponse(assistantMessagePart);
+                    ExassistantMessage += assistantMessagePart;
+                }
+            }*/
+            //console.log("idk why", og_text)
+            await this.createExplainableDoc(
+                og_text,
+                message,
+                {
+                    content: ExassistantMessage,
+                    role: 'assistant',
+                    timeDelay: timeDelay
+                },
+                conversationId,
+                conversation.length + 2,
+                val,
+                ar,
+            );
+        }
+        //console.log(savedMessage)
         return savedMessage;
     };
 
@@ -459,7 +488,7 @@ class ConversationsService {
         }
     };
 
-    private getConversationMessages = (agent: IAgent, conversation: Message[], message: Message, val, ar, ccr, vai, valOption, arOption) => {
+    private getConversationMessages = (agent: IAgent, conversation: Message[], message: Message, val: number, ar: number, ccr, vai) => {
         const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
         const beforeUserMessage = { role: 'system', content: agent.beforeUserSentencePrompt };
         const afterUserMessage = { role: 'system', content: agent.afterUserSentencePrompt };
