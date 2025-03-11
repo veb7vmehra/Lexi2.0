@@ -340,6 +340,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 0.01,
                 slidersEnabled.presencePenaltyEnabled,
             )}
+            {renderCheckbox('audioInput', 'audioInput', slidersEnabled.audioInputEnabled, 'Voice note based input')}
             {renderCheckbox('cameraCaptureRate', 'cameraCaptureRate', slidersEnabled.cameraCaptureRateEnabled, 'Extracting Camera based Features')}
             {slidersEnabled.cameraCaptureRateEnabled && (
                 <Box display="flex" justifyContent="space-between" margin="normal">
@@ -357,7 +358,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
                     </Button>
                 </Box>
             )}
-            {renderCheckbox('audioInput', 'audioInput', slidersEnabled.audioInputEnabled)}
+            
             {renderCheckbox('vaIntegration', 'vaIntegration', slidersEnabled.vaIntegrationEnabled, 'Integrating Valence and Arousal to Conversation Pipeline')}
             <FormControl fullWidth margin="normal" size="small">
                 <InputLabel id="valOption-select-label">Valence Integration Option</InputLabel>
