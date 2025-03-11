@@ -24,7 +24,7 @@ interface CsvData {
     Category: string;
     Valence: number;
     Arousal: number;
-    Dominance: number;
+    //Dominance: number;
 }
 
 const readCsvFile = (filePath: string): Promise<CsvData[]> => {
@@ -90,7 +90,7 @@ class ConversationsService {
 
 
         if ( name === "vebAgent" ) {
-            const data = await readCsvFile('/home/ubuntu/Lexi2.0/emotic_test.csv');
+            const data = await readCsvFile('/home/ubuntu/Lexi2.0/emotic_test_fc.csv');
 	    let veb_count = 0
             for (const row of data) {
 		veb_count += 1
@@ -529,9 +529,10 @@ class ConversationsService {
         } else if (arOption === "all") {
             v_text = " and the average arousal of the user is "+ ar[0].toString() + "while the range of arousal is from "+ ar[2].toString() + " to " + ar[1].toString()
         }
-        const final_message = "The value of valence is "+val[0].toString()+", the value of arousal is "+ar[0].toString()+". The values of Valence, Arousal goes from -5 to 5. Your job is to understand the expression and emotion through these values and find the most fitting "+ar[1].toString()+" categories out  of the following: Peace, Affection, Esteem, Anticipation, Engagement, Confidence, Happiness, Pleasure, Excitement, Surprise, Sympathy, Doubt/Confusion, Disconnection, Fatigue, Embarrassment, Yearning, Disapproval, Aversion, Annoyance, Anger, Sensitivity, Sadness, Disquietment, Fear, Pain and Suffering. The output should only be space seprated names of five categories and nothing else."
-	//v_text + a_text + ". " + explainabilityPrompt
-        message["content"] = final_message
+        //const final_message = "The value of valence is "+val[0].toString()+", the value of arousal is "+ar[0].toString()+". The values of Valence, Arousal goes from -1 to 1. Your job is to understand the expression and emotion through these values and find the most fitting "+ar[1].toString()+" categories out  of the following: Peace, Affection, Esteem, Anticipation, Engagement, Confidence, Happiness, Pleasure, Excitement, Surprise, Sympathy, Doubt/Confusion, Disconnection, Fatigue, Embarrassment, Yearning, Disapproval, Aversion, Annoyance, Anger, Sensitivity, Sadness, Disquietment, Fear, Pain and Suffering. The output should only be space seprated names of five categories and nothing else."
+	const final_message = v_text + a_text + ". " + explainabilityPrompt
+        console.log(final_message)
+	message["content"] = final_message
         console.log(message)
         const messages: any = [
             systemPrompt,
