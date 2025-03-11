@@ -40,7 +40,7 @@ export interface Audio {
     _id?: mongoose.Types.ObjectId;
     role: 'system' | 'user' | 'assistant';
     content: Blob | Buffer | string;
-    timeDelay: number;
+    //timeDelay: number;
     userAnnotation?: UserAnnotation;
 }
 

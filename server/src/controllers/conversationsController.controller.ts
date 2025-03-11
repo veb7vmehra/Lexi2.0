@@ -72,7 +72,7 @@ class ConvesationsController {
                     _id: savedResponse._id,
                     role: savedResponse.role,
                     userAnnotation: savedResponse.userAnnotation,
-                    timeDelay: savedResponse.timeDelay,
+                    //timeDelay: savedResponse.timeDelay,
                     contentType: "audio/mpeg",
                 }));
     
