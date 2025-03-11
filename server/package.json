@@ -39,7 +39,8 @@
     "papaparse": "^5.4.1",
     "react-webcam": "^7.2.0",
     "redis": "^4.6.10",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "wavesurfer.js": "^7.9.1"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",

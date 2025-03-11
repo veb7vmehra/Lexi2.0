@@ -138,6 +138,141 @@ class ConversationsService {
             $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
         });
 
+        //const audio_new = await this.transcribeText(assistantMessage);
+        //console.log(audio_new)
+
+        if ( ccr != null && vai != null ) {
+            const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar, valOption, arOption, explainabilityPrompt);
+            const ExchatRequest = this.getChatRequest(agent, Exmessages);
+
+            let ExassistantMessage = '';        
+
+            if (true) {
+                const response = await openai.chat.completions.create(ExchatRequest);
+                ExassistantMessage = response.choices[0].message.content?.trim();
+            } 
+            /*else {
+                const responseStream = await openai.chat.completions.create({ ...ExchatRequest, stream: true });
+                for await (const partialResponse of responseStream) {
+                    const assistantMessagePart = partialResponse.choices[0]?.delta?.content || '';
+                    await streamResponse(assistantMessagePart);
+                    ExassistantMessage += assistantMessagePart;
+                }
+            }*/
+            //console.log("idk why", og_text)
+            await this.createExplainableDoc(
+                og_text,
+                message,
+                {
+                    content: ExassistantMessage,
+                    role: 'assistant',
+                },
+                conversationId,
+                conversation.length + 2,
+                val,
+                ar,
+            );
+        }
+        
+        return savedMessage;
+    };
+
+    audio = async (message, conversationId: string, streamResponse?) => {
+        const [conversation, metadataConversation] = await Promise.all([
+            this.getConversation(conversationId, true),
+            this.getConversationMetadata(conversationId),
+        ]);
+
+        if (
+            metadataConversation.maxMessages &&
+            metadataConversation.messagesNumber + 1 > metadataConversation.maxMessages
+        ) {
+            const error = new Error('Message limit exceeded');
+            error['code'] = 403;
+            throw error;
+        }
+
+        const agent = JSON.parse(JSON.stringify(metadataConversation.agent));
+        const name = agent.title
+        const ccr = agent.cameraCaptureRate
+        const vai = agent.vaIntegration
+        const valOption = agent.valOption
+        const arOption = agent.arOption
+        const explainabilityPrompt = agent.explainabilityPrompt
+
+        delete agent.cameraCaptureRate;
+        delete agent.vaIntegration;
+        delete agent.valOption;
+        delete agent.arOption;
+        delete agent.explainabilityPrompt;
+
+        const text = await this.transcribeAudio(message.content);
+
+        //console.log(typeof text);
+        message.content = text;
+
+        let val: number[] = [];
+        let ar: number[] = [];
+
+        let og_text = { ...message };
+        
+        if ( ccr != null && vai != null ) {
+            const current_state = await this.getCurrentState(conversationId)
+            val.push(current_state[0]["valence"] / current_state[0]["count"])
+            ar.push(current_state[0]["arousal"] / current_state[0]["count"])
+            val.push(Math.max(...current_state[0]["valence_all"]))
+            val.push(Math.min(...current_state[0]["valence_all"]))
+            ar.push(Math.max(...current_state[0]["arousal_all"]))
+            ar.push(Math.min(...current_state[0]["arousal_all"]))
+
+            await this.updateCurrentState(conversationId, 0, 0, 0);
+        }
+        //console.log(current_state[0]["valence"])
+        //console.log(current_state[0]["arousal"])
+        
+        const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr, vai, valOption, arOption);
+        const chatRequest = this.getChatRequest(agent, messages);
+        
+        //NEED TO FIX THE LINE BELOW
+        await this.createMessageDoc(og_text, conversationId, conversation.length + 1, val, ar);
+
+        let assistantMessage = '';
+        let streamExplainable = streamResponse;
+
+        if (!streamResponse) {
+            const response = await openai.chat.completions.create(chatRequest);
+            assistantMessage = response.choices[0].message.content?.trim();
+            //const num_word = assistantMessage.trim().split(/\s+/).length;
+            //console.log(num_word)
+            //await new Promise(resolve => setTimeout(resolve, (num_word) * 1000));
+        } else {
+            const responseStream = await openai.chat.completions.create({ ...chatRequest, stream: true });
+            for await (const partialResponse of responseStream) {
+                const assistantMessagePart = partialResponse.choices[0]?.delta?.content || '';
+                await streamResponse(assistantMessagePart);
+                assistantMessage += assistantMessagePart;
+            }
+            //const num_word = assistantMessage.trim().split(/\s+/).length;
+            //console.log(num_word)
+            //await new Promise(resolve => setTimeout(resolve, (num_word) * 1000));
+        }
+        //console.log("before create message", timeDelay)
+        const savedMessage = await this.createMessageDoc(
+            {
+                content: assistantMessage,
+                role: 'assistant',
+            },
+            conversationId,
+            conversation.length + 2,
+            val,
+            ar,
+        );
+
+        this.updateConversationMetadata(conversationId, {
+            $inc: { messagesNumber: 1 },
+            $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
+        });
+
         const audio_new = await this.transcribeText(assistantMessage);
         console.log(audio_new)
 
@@ -173,138 +308,14 @@ class ConversationsService {
                 ar,
             );
         }
-        
         const newMessage = {
             "_id": savedMessage._id, 
             "role": savedMessage.role,
             "content": audio_new, 
             "userAnnotation": savedMessage.userAnnotation,
-            "timeDelay": savedMessage.timeDelay,
         }
-        //console.log(newMessage)
+        
         return newMessage;
-    };
-
-    audio = async (message, conversationId: string, streamResponse?) => {
-        const [conversation, metadataConversation] = await Promise.all([
-            this.getConversation(conversationId, true),
-            this.getConversationMetadata(conversationId),
-        ]);
-
-        if (
-            metadataConversation.maxMessages &&
-            metadataConversation.messagesNumber + 1 > metadataConversation.maxMessages
-        ) {
-            const error = new Error('Message limit exceeded');
-            error['code'] = 403;
-            throw error;
-        }
-
-        const agent = JSON.parse(JSON.stringify(metadataConversation.agent));
-        const ccr = agent.cameraCaptureRate
-        const vai = agent.vaIntegration
-        const timeDelay = agent.inverseTimeDelay
-        
-        delete agent.cameraCaptureRate;
-        delete agent.vaIntegration;
-
-        const text = await this.transcribeAudio(message.content);
-
-        //console.log(typeof text);
-        message.content = text;
-
-        let val = 0;
-        let ar = 0
-        
-        if ( ccr != null && vai != null ) {
-            const current_state = await this.getCurrentState(conversationId)
-            val = current_state[0]["valence"] / current_state[0]["count"]
-            ar = current_state[0]["arousal"] / current_state[0]["count"]
-        }
-        //console.log(current_state[0]["valence"])
-        //console.log(current_state[0]["arousal"])
-        
-        const og_text = { ...message };
-        const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr, vai);
-        const chatRequest = this.getChatRequest(agent, messages);
-        
-        //NEED TO FIX THE LINE BELOW
-        await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar);
-
-        let assistantMessage = '';
-        if (!streamResponse) {
-            const response = await openai.chat.completions.create(chatRequest);
-            assistantMessage = response.choices[0].message.content?.trim();
-            //const num_word = assistantMessage.trim().split(/\s+/).length;
-            //console.log(num_word)
-            //await new Promise(resolve => setTimeout(resolve, (num_word) * 1000));
-        } else {
-            const responseStream = await openai.chat.completions.create({ ...chatRequest, stream: true });
-            for await (const partialResponse of responseStream) {
-                const assistantMessagePart = partialResponse.choices[0]?.delta?.content || '';
-                await streamResponse(assistantMessagePart);
-                assistantMessage += assistantMessagePart;
-            }
-            //const num_word = assistantMessage.trim().split(/\s+/).length;
-            //console.log(num_word)
-            //await new Promise(resolve => setTimeout(resolve, (num_word) * 1000));
-        }
-        //console.log("before create message", timeDelay)
-        const savedMessage = await this.createMessageDoc(
-            {
-                content: assistantMessage,
-                role: 'assistant',
-                timeDelay: timeDelay
-            },
-            conversationId,
-            conversation.length + 2,
-            val,
-            ar,
-        );
-
-        this.updateConversationMetadata(conversationId, {
-            $inc: { messagesNumber: 1 },
-            $set: { lastMessageDate: new Date(), lastMessageTimestamp: Date.now() },
-        });
-
-        const audio_new = await this.transcribeText(assistantMessage);
-        console.log(audio_new)
-
-        if ( ccr != null && vai != null ) {
-            const Exmessages: any[] = this.getExplainableText(agent, conversation, message, val, ar);
-            const ExchatRequest = this.getChatRequest(agent, Exmessages);
-
-            let ExassistantMessage = '';        
-
-            if (true) {
-                const response = await openai.chat.completions.create(ExchatRequest);
-                ExassistantMessage = response.choices[0].message.content?.trim();
-            } 
-            /*else {
-                const responseStream = await openai.chat.completions.create({ ...ExchatRequest, stream: true });
-                for await (const partialResponse of responseStream) {
-                    const assistantMessagePart = partialResponse.choices[0]?.delta?.content || '';
-                    await streamResponse(assistantMessagePart);
-                    ExassistantMessage += assistantMessagePart;
-                }
-            }*/
-            //console.log("idk why", og_text)
-            await this.createExplainableDoc(
-                og_text,
-                message,
-                {
-                    content: ExassistantMessage,
-                    role: 'assistant',
-                    timeDelay: timeDelay
-                },
-                conversationId,
-                conversation.length + 2,
-                val,
-                ar,
-            );
-        }
-        //console.log(savedMessage)
-        return savedMessage;
     };
 
     createConversation = async (userId: string, userConversationsNumber: number, experimentId: string) => {
@@ -488,7 +499,77 @@ class ConversationsService {
         }
     };
 
-    private getConversationMessages = (agent: IAgent, conversation: Message[], message: Message, val: number, ar: number, ccr, vai) => {
+    private transcribeAudio = async (audioBuffer: Buffer): Promise<string> => {
+        try {
+            //console.log(typeof audioBuffer);
+            //console.log(audioBuffer);
+            //console.log("inside");
+
+            // Write the buffer to a temporary file
+            const tempFilePath = "./temp_audio.wav";
+            fs.writeFileSync(tempFilePath, audioBuffer);
+
+            // Create a FormData object
+            const formData = new FormData();
+            formData.append("file", fs.createReadStream(tempFilePath));
+            formData.append("model", "whisper-1");
+            formData.append("language", "en");
+
+            //console.log("Hello");
+
+            const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${OPENAI_API_KEY}`,
+                    ...formData.getHeaders(), // Important: This ensures correct Content-Type
+                },
+                body: formData as any,
+            });
+
+            // console.log("HELLO 2");
+
+            const data = await response.json();
+            console.log("Transcription Response:", data);
+
+            // Cleanup temp file
+            fs.unlinkSync(tempFilePath);
+
+            return data.text || "";
+        } catch (error) {
+            console.error("Error transcribing audio:", error);
+            return "";
+        }
+    };
+
+    private transcribeText = async (text: string): Promise<Buffer> => {
+        try {
+            const response = await fetch("https://api.openai.com/v1/audio/speech", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${OPENAI_API_KEY}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    model: "tts-1", // OpenAI's text-to-speech model
+                    input: text,
+                    voice: "alloy", // Choose from 'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'
+                }),
+            });
+    
+            if (!response.ok) {
+                throw new Error(`TTS API Error: ${response.statusText}`);
+            }
+    
+            const audioBuffer = Buffer.from(await response.arrayBuffer());
+    
+            return audioBuffer;
+        } catch (error) {
+            console.error("Error transcribing text to speech:", error);
+            return Buffer.alloc(0);
+        }
+    };
+
+    private getConversationMessages = (agent: IAgent, conversation: Message[], message: Message, val, ar, ccr, vai, valOption, arOption) => {
         const systemPrompt = { role: 'system', content: agent.systemStarterPrompt };
         const beforeUserMessage = { role: 'system', content: agent.beforeUserSentencePrompt };
         const afterUserMessage = { role: 'system', content: agent.afterUserSentencePrompt };
@@ -559,9 +640,9 @@ class ConversationsService {
             v_text = " and the average arousal of the user is "+ ar[0].toString() + "while the range of arousal is from "+ ar[2].toString() + " to " + ar[1].toString()
         }
         //const final_message = "The value of valence is "+val[0].toString()+", the value of arousal is "+ar[0].toString()+". The values of Valence, Arousal goes from -1 to 1. Your job is to understand the expression and emotion through these values and find the most fitting "+ar[1].toString()+" categories out  of the following: Peace, Affection, Esteem, Anticipation, Engagement, Confidence, Happiness, Pleasure, Excitement, Surprise, Sympathy, Doubt/Confusion, Disconnection, Fatigue, Embarrassment, Yearning, Disapproval, Aversion, Annoyance, Anger, Sensitivity, Sadness, Disquietment, Fear, Pain and Suffering. The output should only be space seprated names of five categories and nothing else."
-	const final_message = v_text + a_text + ". " + explainabilityPrompt
+	    const final_message = v_text + a_text + ". " + explainabilityPrompt
         console.log(final_message)
-	message["content"] = final_message
+	    message["content"] = final_message
         console.log(message)
         const messages: any = [
             systemPrompt,
