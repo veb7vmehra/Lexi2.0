@@ -11,7 +11,6 @@ import { experimentsService } from './experiments.service';
 import { usersService } from './users.service';
 import { CurrentStateModels } from '../models/CurrentStateModels';
 //import { validate } from 'uuid';
-import * as fs from 'fs';
 import * as Papa from 'papaparse';
 //import { Readable } from "stream";
 import fetch from "node-fetch";
