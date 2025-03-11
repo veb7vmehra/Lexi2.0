@@ -6,7 +6,16 @@ import { requestHandler } from '../utils/requestHandler';
 import * as path from 'path';
 const fs = require('fs');
 import { format } from 'date-fns';
-import { TimeSeriesAggregationType } from 'redis';
+//import { TimeSeriesAggregationType } from 'redis';
+import multer, { Multer } from "multer";
+import FormData from "form-data";
+
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Extend Request type to include `file`
+interface MulterRequest extends Request {
+    file?: Multer.File;
+}
 
 async function checkFolderExists(folderPath: string): Promise<boolean> {
     try {
@@ -39,6 +48,52 @@ class ConvesationsController {
             res.status(500).json({ message: 'Internal Server Error' });
         },
     );
+
+    audio = [
+        upload.single("audio"),
+        requestHandler(
+            async (req: MulterRequest, res: Response) => {
+                const { role, conversationId } = req.body;
+                const audioBlob = req.file?.buffer;
+    
+                if (!audioBlob) {
+                    return res.status(400).json({ message: "Audio file is missing" });
+                }
+    
+                const savedResponse = await conversationsService.audio(
+                    { content: audioBlob, role },
+                    conversationId
+                );
+    
+                console.log(savedResponse);
+    
+                // Create FormData response
+                const formData = new FormData();
+                formData.append("metadata", JSON.stringify({
+                    _id: savedResponse._id,
+                    role: savedResponse.role,
+                    userAnnotation: savedResponse.userAnnotation,
+                    timeDelay: savedResponse.timeDelay,
+                    contentType: "audio/mpeg",
+                }));
+    
+                formData.append("audio", savedResponse.content, {
+                    filename: "response_audio.mp3",
+                    contentType: "audio/mpeg",
+                });
+    
+                // Set headers manually
+                res.setHeader("Content-Type", `multipart/form-data; boundary=${formData.getBoundary()}`);
+    
+                // Pipe FormData response to the client
+                formData.pipe(res);
+            },
+            (req, res, error) => {
+                res.status(500).json({ message: "Internal Server Error" });
+            }
+        ),
+    ];
+    
 
 
     sendSnap = requestHandler(async (req: Request, res: Response) => {
