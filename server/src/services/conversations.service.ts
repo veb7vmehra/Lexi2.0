@@ -91,8 +91,8 @@ class ConversationsService {
         
         if ( ccr != null && vai != null ) {
             const current_state = await this.getCurrentState(conversationId)
-            val.push(current_state[0]["valence"] / current_state[0]["count"])
-            ar.push(current_state[0]["arousal"] / current_state[0]["count"])
+            val.push((current_state[0]["valence_all"].reduce((acc, num) => acc + num, 0)) / current_state[0]["count"])
+            ar.push((current_state[0]["arousal_all"].reduce((acc, num) => acc+num, 0)) / current_state[0]["count"])
             val.push(Math.max(...current_state[0]["valence_all"]))
             val.push(Math.min(...current_state[0]["valence_all"]))
             ar.push(Math.max(...current_state[0]["arousal_all"]))
@@ -217,8 +217,8 @@ class ConversationsService {
         
         if ( ccr != null && vai != null ) {
             const current_state = await this.getCurrentState(conversationId)
-            val.push(current_state[0]["valence"] / current_state[0]["count"])
-            ar.push(current_state[0]["arousal"] / current_state[0]["count"])
+            val.push((current_state[0]["valence_all"].reduce((acc, num) => acc + num, 0)) / current_state[0]["count"])
+            ar.push((current_state[0]["arousal_all"].reduce((acc, num) => acc+num, 0)) / current_state[0]["count"])
             val.push(Math.max(...current_state[0]["valence_all"]))
             val.push(Math.min(...current_state[0]["valence_all"]))
             ar.push(Math.max(...current_state[0]["arousal_all"]))
