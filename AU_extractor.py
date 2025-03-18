@@ -166,11 +166,13 @@ def process_image(image_path, output_csv, current_time, mongo_key):
 
 
     print("working 1")
+    
 
     # Copy resulting CSV file back from Docker container
     csv_name = image_filename.replace(".jpg", ".csv").replace(".png", ".csv")
     container_csv_path = f"{temp_output_dir}/{csv_name}"
     host_csv_path = os.path.join(output_dir, csv_name)
+    print(container_csv_path)
 
     try:
         with open(host_csv_path, 'wb') as f:
