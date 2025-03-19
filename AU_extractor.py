@@ -137,7 +137,7 @@ def process_child_folder(child_folder):
         for file in os.listdir(child_folder):
             file_path = os.path.join(child_folder, file)
             if os.path.isfile(file_path) and (file.endswith(".jpg") or file.endswith(".png")):
-                print(file_path)
+                //print(file_path)
                 st = time.time()
                 process_image(file_path, output_csv, current_time, mongo_key)
                 print("--- %s seconds ---" % (time.time() - st))
@@ -172,7 +172,14 @@ def process_image(image_path, output_csv, current_time, mongo_key):
     # Copy resulting CSV file back from Docker container
     csv_name = image_filename.replace(".jpg", ".csv").replace(".png", ".csv")
     container_csv_path = f"{temp_output_dir}/{csv_name}"
-    print(os.path.isfile(container_csv_path))
+    check_command = f"test -f {container_csv_path} && echo 'exists' || echo 'missing'"
+    exit_code, output = container.exec_run(check_command)
+
+    if b"exists" in output:
+        print(f"File {container_csv_path} exists inside the container.")
+    else:
+        print(f"Error: File {container_csv_path} does NOT exist inside the container.")
+
     host_csv_path = os.path.join(output_dir, csv_name)
     print(container_csv_path)
 
