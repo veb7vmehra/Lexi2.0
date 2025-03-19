@@ -190,7 +190,24 @@ def process_image(image_path, output_csv, current_time, mongo_key):
                 f.write(chunk)
     except Exception as e:
         print(f"Error: Could not retrieve the file {container_csv_path} - {e}")
-        #return
+        frame = cv2.imread(image_path)
+        # detect faces
+        facePoints, face = imageProcessing.detectFace(frame)
+        face = imageProcessing.preProcess(face, faceSize)
+        # Obtain dimensional classification
+        dimensionalRecognition = numpy.array(faceChannelDim.predict(face, preprocess=False))
+
+        data_to_send = []
+
+        data_to_send.append(float(dimensionalRecognition[1][0][0]))
+        data_to_send.append(float(dimensionalRecognition[0][0][0]))
+
+        add_or_update_data(mongo_key, data_to_send)
+
+        print("Data sending even after error")
+
+        shutil.rmtree(output_dir, ignore_errors=False, onerror=handleRemoveReadonly)
+        return
     
     frame = cv2.imread(image_path)
     # detect faces
