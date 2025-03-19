@@ -181,16 +181,16 @@ def process_image(image_path, output_csv, current_time, mongo_key):
         print(f"Error: File {container_csv_path} does NOT exist inside the container.")
 
     host_csv_path = os.path.join(output_dir, csv_name)
-    print(container_csv_path)
-
+    
     try:
         with open(host_csv_path, 'wb') as f:
             bits, _ = container.get_archive(container_csv_path)
+            print(bits)
             for chunk in bits:
                 f.write(chunk)
     except Exception as e:
         print(f"Error: Could not retrieve the file {container_csv_path} - {e}")
-        return
+        #return
     
     frame = cv2.imread(image_path)
     # detect faces
