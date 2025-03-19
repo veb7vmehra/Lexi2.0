@@ -71,7 +71,7 @@ class ConversationsService {
         //const { cameraCaptureRate, ...agentWithoutCameraCaptureRate } = agent;
         //console.log(agent)
         const name = agent.title
-        console.log(name)
+        //console.log(name)
         const ccr = agent.cameraCaptureRate
         const vai = agent.vaIntegration
         const valOption = agent.valOption
@@ -91,6 +91,7 @@ class ConversationsService {
         
         if ( ccr != null && vai != null ) {
             const current_state = await this.getCurrentState(conversationId)
+            console.log(current_state[0]["valence_all"])
             val.push((current_state[0]["valence_all"].reduce((acc, num) => acc + num, 0)) / current_state[0]["count"])
             ar.push((current_state[0]["arousal_all"].reduce((acc, num) => acc+num, 0)) / current_state[0]["count"])
             val.push(Math.max(...current_state[0]["valence_all"]))
