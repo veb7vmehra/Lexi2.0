@@ -137,7 +137,7 @@ def process_child_folder(child_folder):
         for file in os.listdir(child_folder):
             file_path = os.path.join(child_folder, file)
             if os.path.isfile(file_path) and (file.endswith(".jpg") or file.endswith(".png")):
-                //print(file_path)
+                #print(file_path)
                 st = time.time()
                 process_image(file_path, output_csv, current_time, mongo_key)
                 print("--- %s seconds ---" % (time.time() - st))
