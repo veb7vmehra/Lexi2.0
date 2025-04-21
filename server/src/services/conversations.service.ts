@@ -89,18 +89,37 @@ class ConversationsService {
         let val: number[] = [];
         let ar: number[] = [];
         
-        if ( ccr != null ) {
-            const current_state = await this.getCurrentState(conversationId)
-            console.log(current_state[0]["valence_all"])
-            val.push((current_state[0]["valence_all"].reduce((acc, num) => acc + num, 0)) / current_state[0]["count"])
-            ar.push((current_state[0]["arousal_all"].reduce((acc, num) => acc+num, 0)) / current_state[0]["count"])
-            val.push(Math.max(...current_state[0]["valence_all"]))
-            val.push(Math.min(...current_state[0]["valence_all"]))
-            ar.push(Math.max(...current_state[0]["arousal_all"]))
-            ar.push(Math.min(...current_state[0]["arousal_all"]))
-
+        if (ccr != null) {
+            const current_state = await this.getCurrentState(conversationId);
+            const valence_all = current_state[0]["valence_all"];
+            const arousal_all = current_state[0]["arousal_all"];
+            const count = current_state[0]["count"];
+        
+            if (Array.isArray(valence_all) && valence_all.length > 0 && count > 0) {
+                const val_mean = valence_all.reduce((acc, num) => acc + num, 0) / count;
+                val.push(isFinite(val_mean) ? val_mean : 0);
+                val.push(Math.max(...valence_all));
+                val.push(Math.min(...valence_all));
+            }
+        
+            if (Array.isArray(arousal_all) && arousal_all.length > 0 && count > 0) {
+                const ar_mean = arousal_all.reduce((acc, num) => acc + num, 0) / count;
+                ar.push(isFinite(ar_mean) ? ar_mean : 0);
+                ar.push(Math.max(...arousal_all));
+                ar.push(Math.min(...arousal_all));
+            }
+        
+            // If nothing was pushed (e.g., arrays were empty), default to [0, 0, 0]
+            if (val.length === 0) {
+                val.push(0, 0, 0);
+            }
+            if (ar.length === 0) {
+                ar.push(0, 0, 0);
+            }
+        
             await this.updateCurrentState(conversationId, 0, 0, 0);
         }
+        
         
         const og_text = { ...message };
         //console.log(og_text)
@@ -216,25 +235,37 @@ class ConversationsService {
 
         let og_text = { ...message };
         
-        if ( ccr != null && vai != null ) {
-            const current_state = await this.getCurrentState(conversationId)
-            console.log(current_state[0]["valence_all"])
-            val.push((current_state[0]["valence_all"].reduce((acc, num) => acc + num, 0)) / current_state[0]["count"])
-            ar.push((current_state[0]["arousal_all"].reduce((acc, num) => acc+num, 0)) / current_state[0]["count"])
-            val.push(Math.max(...current_state[0]["valence_all"]))
-            val.push(Math.min(...current_state[0]["valence_all"]))
-            ar.push(Math.max(...current_state[0]["arousal_all"]))
-            ar.push(Math.min(...current_state[0]["arousal_all"]))
-
+        if (ccr != null && vai != null) {
+            const current_state = await this.getCurrentState(conversationId);
+            const valence_all = current_state[0]["valence_all"];
+            const arousal_all = current_state[0]["arousal_all"];
+            const count = current_state[0]["count"];
+        
+            if (Array.isArray(valence_all) && valence_all.length > 0 && count > 0) {
+                const val_mean = valence_all.reduce((acc, num) => acc + num, 0) / count;
+                val.push(isFinite(val_mean) ? val_mean : 0);
+                val.push(Math.max(...valence_all));
+                val.push(Math.min(...valence_all));
+            }
+        
+            if (Array.isArray(arousal_all) && arousal_all.length > 0 && count > 0) {
+                const ar_mean = arousal_all.reduce((acc, num) => acc + num, 0) / count;
+                ar.push(isFinite(ar_mean) ? ar_mean : 0);
+                ar.push(Math.max(...arousal_all));
+                ar.push(Math.min(...arousal_all));
+            }
+        
+            // If nothing was pushed (e.g., arrays were empty), default to [0, 0, 0]
+            if (val.length === 0) {
+                val.push(0, 0, 0);
+            }
+            if (ar.length === 0) {
+                ar.push(0, 0, 0);
+            }
+        
             await this.updateCurrentState(conversationId, 0, 0, 0);
         }
-
-        if (val.length === 0) {
-            val.push(0, 0, 0);
-        }
-        if (ar.length === 0) {
-            ar.push(0, 0, 0);
-        }
+        
         
         //console.log(current_state[0]["valence"])
         //console.log(current_state[0]["arousal"])
