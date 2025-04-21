@@ -228,6 +228,14 @@ class ConversationsService {
 
             await this.updateCurrentState(conversationId, 0, 0, 0);
         }
+
+        if (val.length === 0) {
+            val.push(0, 0, 0);
+        }
+        if (ar.length === 0) {
+            ar.push(0, 0, 0);
+        }
+        
         //console.log(current_state[0]["valence"])
         //console.log(current_state[0]["arousal"])
         
