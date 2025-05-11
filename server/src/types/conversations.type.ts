@@ -14,6 +14,9 @@ export interface IConversation {
     valence: number;
     arousal: number;
     timeDelay: number;
+    pit: number;
+    loud: number;
+    snr: number;
 }
 
 export interface IExplainable {

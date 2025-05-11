@@ -10,15 +10,123 @@ import { MetadataConversationsModel } from '../models/MetadataConversationsModel
 import { experimentsService } from './experiments.service';
 import { usersService } from './users.service';
 import { CurrentStateModels } from '../models/CurrentStateModels';
-//import { validate } from 'uuid';
-//import { Readable } from "stream";
 import fetch from "node-fetch";
+import Meyda from 'meyda';
+import { AudioContext } from "node-web-audio-api";
+import ffmpeg from "fluent-ffmpeg";
+import ffmpegPath from "@ffmpeg-installer/ffmpeg";
+//import { Readable } from "stream";
+//import { PassThrough } from "stream";
+//import { exec } from "child_process";
+//import util from "util";
+import path from "path";
+
+//const execPromise = util.promisify(exec);
+
+ffmpeg.setFfmpegPath(ffmpegPath.path);
 
 dotenv.config();
 
 const { OPENAI_API_KEY } = process.env;
 if (!OPENAI_API_KEY) throw new Error('Server is not configured with OpenAI API key');
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+
+async function convertToWav(inputBuffer: Buffer): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+        const tempInput = "temp_input.wav";
+        const tempOutput = "temp_output.wav";
+
+        // Write input buffer to temp file
+        fs.writeFileSync(tempInput, inputBuffer);
+
+        // Convert to PCM WAV
+        ffmpeg(tempInput)
+            .output(tempOutput)
+            .audioCodec("pcm_s16le") // Ensures PCM format
+            .toFormat("wav")
+            .on("end", () => {
+                const wavBuffer = fs.readFileSync(tempOutput);
+                fs.unlinkSync(tempInput);
+                fs.unlinkSync(tempOutput);
+                resolve(wavBuffer);
+            })
+            .on("error", (err) => reject(err))
+            .run();
+    });
+}
+
+async function extractAudioFeatures(audioBuffer: Buffer): Promise<{ pitch: number; loudness: number; snr: number }> {
+    try {
+        const audioContext = new AudioContext();
+
+        // Convert Buffer to ArrayBuffer
+        const arrayBuffer = audioBuffer.buffer.slice(audioBuffer.byteOffset, audioBuffer.byteOffset + audioBuffer.byteLength);
+
+        // Decode Audio
+        const audioBufferNode = await audioContext.decodeAudioData(arrayBuffer);
+        const channelData = audioBufferNode.getChannelData(0); // Get first channel
+
+        const bufferSize = 1024;
+        const numChunks = Math.floor(channelData.length / bufferSize);
+
+        let totalPitch = 0;
+        let totalLoudness = 0;
+        let count = 0;
+
+        let signalRMSsum = 0;
+        let noiseRMSsum = 0;
+        let signalCount = 0;
+        let noiseCount = 0;
+
+        const noiseThresholdIndex = Math.floor(numChunks * 0.1); // first 10% as noise
+
+        for (let i = 0; i < numChunks; i++) {
+            const chunkArray = channelData.slice(i * bufferSize, (i + 1) * bufferSize);
+            const chunk = new Float32Array(chunkArray);
+            const features = Meyda.extract(["rms", "spectralCentroid"], chunk);
+
+            if (features && features.rms !== undefined && features.spectralCentroid !== undefined) {
+                const rms = features.rms || 0;
+                const pitch = features.spectralCentroid || 0;
+
+                totalPitch += pitch;
+                totalLoudness += rms;
+                count++;
+
+                if (i < noiseThresholdIndex) {
+                    noiseRMSsum += rms;
+                    noiseCount++;
+                } else {
+                    signalRMSsum += rms;
+                    signalCount++;
+                }
+            }
+        }
+
+        // Average RMS
+        const avgSignalRMS = signalCount > 0 ? signalRMSsum / signalCount : 1e-8;
+        const avgNoiseRMS = noiseCount > 0 ? noiseRMSsum / noiseCount : 1e-8;
+
+        // SNR in dB
+        const snr = 20 * Math.log10(avgSignalRMS / avgNoiseRMS);
+
+        console.log({
+            avgSignalRMS,
+            avgNoiseRMS,
+            snr,
+        });        
+
+        return {
+            pitch: count > 0 ? totalPitch / count : 0,
+            loudness: count > 0 ? totalLoudness / count : 0,
+            snr: Number.isFinite(snr) ? snr : 0,
+        };
+    } catch (error) {
+        console.error("Error processing audio:", error);
+        return { pitch: 0, loudness: 0, snr: 0 };
+    }
+}
+
 
 class ConversationsService {
     message = async (message, conversationId: string, streamResponse?) => {
@@ -64,7 +172,7 @@ class ConversationsService {
         //console.log(og_text)
         const messages: any[] = this.getConversationMessages(agent, conversation, message, val, ar, ccr, vai);
         const chatRequest = this.getChatRequest(agent, messages);
-        await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar);
+        await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar, 0, 0, 0);
 
         let assistantMessage = '';
         let streamExplainable = streamResponse;
@@ -96,6 +204,9 @@ class ConversationsService {
             conversation.length + 2,
             val,
             ar,
+            0,
+            0,
+            0
         );
 
         this.updateConversationMetadata(conversationId, {
@@ -164,6 +275,25 @@ class ConversationsService {
         delete agent.cameraCaptureRate;
         delete agent.vaIntegration;
 
+        //console.log(message.content)
+        //console.log(typeof(message.content))
+
+        //const audioBlob = new Blob([message.content], { type: "audio/wav" });
+
+        let pit = 0
+        let loud = 0
+        let sn = 0
+
+        await this.processAudio(message.content).then(({ pitch, loudness, snr }) => {
+            pit = pitch
+            loud = loudness
+            sn = snr
+        });
+
+        console.log(pit)
+        console.log(loud)
+        console.log(sn)
+
         const text = await this.transcribeAudio(message.content);
 
         //console.log(typeof text);
@@ -183,7 +313,7 @@ class ConversationsService {
         const chatRequest = this.getChatRequest(agent, messages);
         
         //NEED TO FIX THE LINE BELOW
-        await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar);
+        await this.createMessageDoc(message, conversationId, conversation.length + 1, val, ar, pit, loud, sn);
 
         let assistantMessage = '';
         if (!streamResponse) {
@@ -214,6 +344,9 @@ class ConversationsService {
             conversation.length + 2,
             val,
             ar,
+            pit,
+            loud,
+            sn,
         );
 
         this.updateConversationMetadata(conversationId, {
@@ -307,7 +440,7 @@ class ConversationsService {
         };
         console.log(firstMessage)
         await Promise.all([
-            this.createMessageDoc(firstMessage, res._id.toString(), 1, 0, 0),
+            this.createMessageDoc(firstMessage, res._id.toString(), 1, 0, 0, 0, 0, 0),
             usersService.addConversation(userId),
             !user.isAdmin && experimentsService.addSession(experimentId),
         ]);
@@ -416,7 +549,17 @@ class ConversationsService {
         }
     };
 
-    
+    private processAudio = async (audioBuffer: Buffer) => {
+        try {
+            const wavBuffer = await convertToWav(audioBuffer);
+            return await extractAudioFeatures(wavBuffer);
+        } catch (error) {
+            console.error("Error processing audio:", error);
+            return { pitch: 0, loudness: 0, snr: 0 };
+        }
+    }
+
+
     private transcribeAudio = async (audioBuffer: Buffer): Promise<string> => {
         try {
             //console.log(typeof audioBuffer);
@@ -536,6 +679,9 @@ class ConversationsService {
         messageNumber: number,
         val: number,
         ar: number,
+        pit: number,
+        loud: number,
+        snr: number,
     ): Promise<Message> => {
         
         const res = await ConversationsModel.create({
@@ -546,6 +692,9 @@ class ConversationsService {
             valence: val,
             arousal: ar,
             timeDelay: message.timeDelay,
+            pit: pit,
+            loud: loud,
+            snr: snr,
         });
         //console.log("resTimeDelay", res.timeDelay)
         return { _id: res._id, role: res.role, content: res.content, userAnnotation: res.userAnnotation, timeDelay: res.timeDelay };

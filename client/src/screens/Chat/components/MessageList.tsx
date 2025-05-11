@@ -2,7 +2,7 @@ import LoadingDots from '@components/loadig-dots/LoadingDots';
 import { Box } from '@mui/material';
 import { MessageType } from '@root/models/AppModels';
 import Message from './Message';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface MessageListProps {
     isMobile: boolean;
@@ -21,7 +21,20 @@ const MessageList: React.FC<MessageListProps> = ({
     experimentHasUserAnnotation,
     handleUpdateUserAnnotation,
 }) => {
+
+    const [showLoadingDots, setShowLoadingDots] = useState(false);
+
     useEffect(() => {
+
+
+        let timer;
+        if (isMessageLoading) {
+            timer = setTimeout(() => {
+                setShowLoadingDots(true);
+            }, 500);
+        } else {
+            setShowLoadingDots(false)
+        }
         console.log('MessageList props:', {
             isMobile,
             messages,
@@ -30,6 +43,8 @@ const MessageList: React.FC<MessageListProps> = ({
             experimentHasUserAnnotation,
             handleUpdateUserAnnotation,
         });
+
+        return () => clearTimeout(timer);
     }, [isMobile, messages, isMessageLoading, size, experimentHasUserAnnotation, handleUpdateUserAnnotation]);
 
     return (
@@ -44,7 +59,7 @@ const MessageList: React.FC<MessageListProps> = ({
                 experimentHasUserAnnotation={experimentHasUserAnnotation}
             />
         ))}
-        {isMessageLoading && <LoadingDots />}
+        {showLoadingDots && <LoadingDots />}
     </Box>
 );
 };

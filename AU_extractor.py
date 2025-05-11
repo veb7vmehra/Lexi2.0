@@ -133,7 +133,9 @@ def process_image(image_path, output_csv, current_time, mongo_key):
     os.makedirs(output_dir, exist_ok=True)
 
     # Run OpenFace FeatureExtraction tool
-    subprocess.run([openface_exe, "-f", image_path, "-out_dir", output_dir])
+    
+    #subprocess.run([openface_exe, "-f", image_path, "-out_dir", output_dir])
+    
     print("working 1")
     frame = cv2.imread(image_path)
     # detect faces
@@ -142,6 +144,8 @@ def process_image(image_path, output_csv, current_time, mongo_key):
     # Obtain dimensional classification
     dimensionalRecognition = numpy.array(faceChannelDim.predict(face, preprocess=False))
     # Read the generated CSV file
+
+    """
     csv_name = os.path.basename(image_path)
     csv_name = csv_name[:-4]
     output_file = os.path.join(output_dir, f"{csv_name}.csv")
@@ -154,17 +158,21 @@ def process_image(image_path, output_csv, current_time, mongo_key):
         df['valence'] = dimensionalRecognition[1][0][0]
         df['filename'] = os.path.basename(image_path)
         df['timeStamp'] = time.ctime(int(current_time))
-        data_to_send.append(float(dimensionalRecognition[1][0][0]))
-        data_to_send.append(float(dimensionalRecognition[0][0][0]))
+        """
+    data_to_send.append(float(dimensionalRecognition[1][0][0]))
+    data_to_send.append(float(dimensionalRecognition[0][0][0]))
 
-        add_or_update_data(mongo_key, data_to_send)
+    add_or_update_data(mongo_key, data_to_send)
 
+
+    """
         if not os.path.exists(output_csv):
             df.to_csv(output_csv, index=False)
             #print("file written")
         else:
             df.to_csv(output_csv, mode='a', header=False, index=False)
             #print("file written")
+    """
 
     # Clean up temporary output directory
     """

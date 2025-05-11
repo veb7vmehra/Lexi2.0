@@ -110,6 +110,9 @@ const messagesSheetCol = [
     { header: 'Content', key: 'content' },
     { header: 'Valence', key: 'valence' },
     { header: 'Arousal', key: 'arousal' },
+    { header: 'Pitch', key: 'pit'},
+    {header: 'Loudness', key: 'loud'},
+    {header: 'SNR', key: 'snr'},
     { header: 'Created At', key: 'createdAt' },
 ];
 
@@ -320,6 +323,9 @@ class DataAggregationService {
                             content: message.content,
                             valence: message.valence,
                             arousal: message.arousal,
+                            pit: message.pit,
+                            loud: message.loud,
+                            snr: message.snr,
                             role: message.role,
                             createdAt: message.createdAt,
                             messageNumber: message.messageNumber,
