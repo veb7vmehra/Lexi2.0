@@ -1,2 +1,3 @@
 /openFace/
 docker-compose.yml
+./git-filter-repo
