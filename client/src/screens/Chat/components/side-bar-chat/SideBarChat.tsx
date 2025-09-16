@@ -12,6 +12,8 @@ interface SidebarProps {
 
 export const SidebarChat: React.FC<SidebarProps> = ({ setIsOpen, messageFontSize, setMessageFontSize }) => (
     <StyledList>
+        {
+        /*
         <Box>
             <StyledListItem onClick={() => setIsOpen(true)}>
                 <StyledListItemIcon>
@@ -25,6 +27,8 @@ export const SidebarChat: React.FC<SidebarProps> = ({ setIsOpen, messageFontSize
                 </ListItemText>
             </ListItem>
         </Box>
+        */
+        }
         <Box paddingLeft={'16px'}>
             <ListItemText width={'80%'} textAlign={'left'}>
                 Font Size:

@@ -13,12 +13,14 @@ import {
 import { NewUserInfoType } from '../../models/AppModels';
 import { FormButton, FormContainer, NoteText, StyledContainer } from './CommonFormStyles.s';
 
+/*
 const genderOptions = [
     { label: 'Male', value: 'male' },
     { label: 'Female', value: 'female' },
     { label: 'Other', value: 'other' },
     { label: 'Prefer Not To Say', value: 'prefer not to say' },
 ];
+*/
 
 interface FirstRegisterFormProps {
     setPage: (page: number) => void;
@@ -73,6 +75,8 @@ export const FirstRegisterForm: React.FC<FirstRegisterFormProps> = ({
                         id="username"
                     />
                 </Grid>
+                
+                {/*
                 <Grid item xs={6}>
                     <TextField
                         type="number"
@@ -117,6 +121,7 @@ export const FirstRegisterForm: React.FC<FirstRegisterFormProps> = ({
                         ))}
                     </TextField>
                 </Grid>
+                */}
             </FormContainer>
             <Box display={'flex'} justifyContent={'center'}>
                 <FormButton type="submit" onClick={handleSubmit(handleContinue)}>
