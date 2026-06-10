@@ -98,7 +98,7 @@ C:\Users\<USERNAME>\.conda\envs\lexi\lib\site-packages\FaceChannel\FaceChannelV1
 ```
 Or similar folder of your python environment.
 
-### Step 6: Running the Project
+### Step 5: Running the Project
 
 - For the Client:
     ```bash
